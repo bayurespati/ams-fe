@@ -140,6 +140,7 @@ const NegaraTable = () => {
 
   const onSubmit = e => {
     e.preventDefault()
+
     const updatedNegara = {
       nama: editValue.nama,
       alias: editValue.alias,
