@@ -223,7 +223,6 @@ const AsetKeluarTable = () => {
             pb: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
           }}
         >
-
           <Box component='form' onSubmit={onSubmit}>
             <FormGroup sx={{ mb: 2, flexDirection: 'column', flexWrap: ['wrap', 'nowrap'] }}>
               <Grid item xs={12}>
@@ -271,12 +270,7 @@ const AsetKeluarTable = () => {
                   htmlFor='account-settings-upload-image'
                 >
                   Upload File Evidence
-                  <input
-                    hidden
-                    type='file'
-                    accept='image/png, image/jpeg'
-                    id='account-settings-upload-image'
-                  />
+                  <input hidden type='file' accept='image/png, image/jpeg' id='account-settings-upload-image' />
                 </ButtonStyled>
               </Grid>
 
