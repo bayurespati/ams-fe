@@ -4,9 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
-import { CardContent, CardHeader } from '@mui/material'
+import { CardHeader } from '@mui/material'
 import Grid from '@mui/material/Grid'
-import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -14,7 +13,6 @@ import DialogContent from '@mui/material/DialogContent'
 import FormGroup from '@mui/material/FormGroup'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import AlertTitle from '@mui/material/AlertTitle'
 import { DataGrid } from '@mui/x-data-grid'
 import toast from 'react-hot-toast'
 import Tab from '@mui/material/Tab'
@@ -35,14 +33,6 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Actions Imports
 import { fetchData, addData, editData, setSearchQuery, deleteData, restoreGarbage } from 'src/store/apps/negara'
-
-const colors = {
-  support: 'info',
-  users: 'success',
-  manager: 'warning',
-  administrator: 'primary',
-  'restricted-user': 'error'
-}
 
 const defaultColumns = [
   {
@@ -71,20 +61,17 @@ const NegaraTable = () => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
   const [tab, setTab] = useState('1')
 
-  const handleTabChange = (event, newValue) => {
-    setTab(newValue)
-  }
-
   // ** Hooks
   const dispatch = useDispatch()
   const store = useSelector(state => state.negara)
 
+  // Helper untuk refresh data dari backend
+  const refreshData = () => {
+    dispatch(fetchData({ q: value }))
+  }
+
   useEffect(() => {
-    dispatch(
-      fetchData({
-        q: value
-      })
-    )
+    refreshData()
   }, [dispatch, value])
 
   const handleFilter = useCallback(
@@ -95,9 +82,14 @@ const NegaraTable = () => {
     [dispatch]
   )
 
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue)
+  }
+
+  const handleDialogToggle = () => setEditDialogOpen(!editDialogOpen)
+
   const handleEditPermission = row => {
     setEditValue({ id: row.id, nama: row.nama, alias: row.alias })
-
     setEditDialogOpen(true)
   }
 
@@ -105,19 +97,18 @@ const NegaraTable = () => {
     try {
       await dispatch(addData(newNegara)).unwrap()
       toast.success('Negara berhasil ditambahkan!')
+      refreshData()
     } catch (error) {
       console.error('Gagal menambahkan negara:', error)
       toast.error('Gagal menambahkan negara!')
     }
   }
 
-  const handleDialogToggle = () => setEditDialogOpen(!editDialogOpen)
-
   const handleEditNegara = async updatedNegara => {
-    // e.preventDefault()
     try {
       await dispatch(editData(updatedNegara)).unwrap()
       toast.success('Negara berhasil diedit!')
+      refreshData()
     } catch (error) {
       console.error('Gagal mengedit negara:', error)
       toast.error('Gagal mengedit negara!')
@@ -125,24 +116,11 @@ const NegaraTable = () => {
     setEditDialogOpen(false)
   }
 
-  const onSubmit = e => {
-    e.preventDefault()
-
-    const updatedNegara = {
-      nama: editValue.nama,
-      alias: editValue.alias,
-      id: editValue.id
-    }
-
-    // Logika update negara
-    handleEditNegara(updatedNegara)
-    setEditDialogOpen(false)
-  }
-
   const handleDelete = async id => {
     try {
       await dispatch(deleteData(id)).unwrap()
       toast.success('Negara berhasil dihapus!')
+      refreshData()
     } catch (error) {
       console.error('Gagal menghapus negara:', error)
       toast.error('Gagal menghapus negara!')
@@ -152,11 +130,22 @@ const NegaraTable = () => {
   const handleRestore = async id => {
     try {
       await dispatch(restoreGarbage(id)).unwrap()
-      toast.success('Negara berhasil di restore!')
+      toast.success('Negara berhasil di-restore!')
+      refreshData()
     } catch (error) {
       console.error('Gagal merestore negara:', error)
       toast.error('Gagal merestore negara!')
     }
+  }
+
+  const onSubmit = e => {
+    e.preventDefault()
+    const updatedNegara = {
+      nama: editValue.nama,
+      alias: editValue.alias,
+      id: editValue.id
+    }
+    handleEditNegara(updatedNegara)
   }
 
   const columns = [
@@ -184,13 +173,11 @@ const NegaraTable = () => {
               </Tooltip>
             </>
           ) : (
-            <>
-              <Tooltip arrow title='Aktifkan kembali'>
-                <IconButton onClick={() => handleRestore(row.id)}>
-                  <Icon icon='tabler:restore' />
-                </IconButton>
-              </Tooltip>
-            </>
+            <Tooltip arrow title='Aktifkan kembali'>
+              <IconButton onClick={() => handleRestore(row.id)}>
+                <Icon icon='tabler:restore' />
+              </IconButton>
+            </Tooltip>
           )}
         </Box>
       )
@@ -252,6 +239,7 @@ const NegaraTable = () => {
           </Card>
         </Grid>
       </Grid>
+
       <Dialog maxWidth='sm' fullWidth onClose={handleDialogToggle} open={editDialogOpen}>
         <DialogTitle
           sx={{
@@ -263,7 +251,6 @@ const NegaraTable = () => {
           <Typography variant='h5' component='span' sx={{ mb: 2 }}>
             Edit Negara
           </Typography>
-          {/* <Typography variant='body2'>Edit Negara.</Typography> */}
         </DialogTitle>
         <DialogContent
           sx={{
@@ -276,23 +263,23 @@ const NegaraTable = () => {
               <Grid item xs={12}>
                 <CustomTextField
                   fullWidth
-                  color={'secondary'}
+                  color='secondary'
                   value={editValue.nama}
                   label='Nama Negara'
-                  sx={{ mr: [0, 4], mb: [3, 5] }}
                   placeholder='Masukkan Nama Negara'
                   onChange={e => setEditValue({ ...editValue, nama: e.target.value })}
+                  sx={{ mb: [3, 5] }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <CustomTextField
                   fullWidth
-                  color={'secondary'}
+                  color='secondary'
                   value={editValue.alias}
                   label='Nama Alias'
-                  sx={{ mr: [0, 4], mb: [3, 5] }}
                   placeholder='Masukkan Nama Alias'
                   onChange={e => setEditValue({ ...editValue, alias: e.target.value })}
+                  sx={{ mb: [3, 5] }}
                 />
               </Grid>
 
@@ -300,7 +287,6 @@ const NegaraTable = () => {
                 Update
               </Button>
             </FormGroup>
-            {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
           </Box>
         </DialogContent>
       </Dialog>

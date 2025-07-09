@@ -86,8 +86,8 @@ const schema = yup.object().shape({
 })
 
 const defaultValues = {
-  password: `${env.process.env.NEXT_PUBLIC_APP_PASSWORD}`,
-  username: `${env.process.env.NEXT_PUBLIC_APP_USERNAME}`
+  password: `${process.env.NEXT_PUBLIC_APP_PASSWORD}`,
+  username: `${process.env.NEXT_PUBLIC_APP_USERNAME}`
 }
 
 const LoginPage = () => {
