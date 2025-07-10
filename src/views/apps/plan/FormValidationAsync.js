@@ -56,6 +56,12 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
   const onSubmit = async data => {
     // const formData = new FormData()
 
+    if (!filePrpo || filePrpo.length === 0) {
+      setFileError(true)
+      return
+    }
+    setFileError(false)
+
     for (const key in data) {
       formData.append(key, data[key])
     }
@@ -82,6 +88,8 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
       setLoading(false)
     }
   }
+
+  const [fileError, setFileError] = useState(false)
 
   return (
     <Card>
@@ -133,26 +141,37 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
                 name='jenis_barang_id'
                 control={control}
                 rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomAutocomplete
-                    fullWidth
-                    color={'secondary'}
-                    options={data_jenis_barang}
-                    id='jenis_barang_id'
-                    onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya title
-                    getOptionLabel={option => option.nama || ''}
-                    value={data_jenis_barang.find(option => option.id === value) || null} // Temukan objek berdasarkan title
-                    renderInput={params => (
-                      <CustomTextField
-                        placeholder='Printer'
-                        {...params}
-                        label='Jenis Aset'
-                        error={Boolean(errors.jenis_barang_id)}
-                        {...(errors.jenis_barang_id && { helperText: 'This field is required' })}
-                      />
-                    )}
-                  />
-                )}
+                render={({ field: { value, onChange } }) => {
+                  console.log('🟡 Current value (uuid):', value)
+                  console.log(
+                    '🟢 Matched data_jenis_barang:',
+                    data_jenis_barang.find(opt => opt.id === value)
+                  )
+
+                  return (
+                    <CustomAutocomplete
+                      fullWidth
+                      color={'secondary'}
+                      options={data_jenis_barang}
+                      id='jenis_barang_id'
+                      onChange={(event, newValue) => {
+                        console.log('🟣 Selected option:', newValue)
+                        onChange(newValue ? newValue.id : '')
+                      }}
+                      getOptionLabel={option => option.nama || ''}
+                      value={data_jenis_barang.find(option => option.id === value) || null}
+                      renderInput={params => (
+                        <CustomTextField
+                          placeholder='Printer'
+                          {...params}
+                          label='Jenis Aset'
+                          error={Boolean(errors.jenis_barang_id)}
+                          {...(errors.jenis_barang_id && { helperText: 'This field is required' })}
+                        />
+                      )}
+                    />
+                  )
+                }}
               />
             </Grid>
 
@@ -164,19 +183,22 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
                 render={({ field: { value, onChange } }) => (
                   <CustomAutocomplete
                     fullWidth
-                    color={'secondary'}
+                    color='secondary'
                     options={data_tipe_barang}
                     id='tipe_barang_id'
-                    onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya title
+                    value={data_tipe_barang.find(option => option.id === value) || null}
                     getOptionLabel={option => option.nama || ''}
-                    value={data_tipe_barang.find(option => option.title === value) || null} // Temukan objek berdasarkan title
+                    onChange={(event, newValue) => {
+                      console.log('Selected Tipe:', newValue)
+                      onChange(newValue ? newValue.id : '') // kirim UUID ke form
+                    }}
                     renderInput={params => (
                       <CustomTextField
-                        placeholder='615'
                         {...params}
                         label='Tipe Aset'
+                        placeholder='Pilih Tipe Aset'
                         error={Boolean(errors.tipe_barang_id)}
-                        {...(errors.tipe_barang_id && { helperText: 'This field is required' })}
+                        helperText={errors.tipe_barang_id ? 'This field is required' : ''}
                       />
                     )}
                   />
@@ -251,11 +273,14 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
             </Grid>
             <Grid item xs={6}>
               <Typography variant='body2' component='span' sx={{ mb: 2 }}>
-                {' '}
-                Upload File PRPO{' '}
+                Upload File PRPO
               </Typography>
               <InputFileUploadBtn files={filePrpo} setFiles={setFilePrpo} />
-              {/* <FileUploaderSingle files={filePrpo} setFiles={setFilePrpo} /> */}
+              {fileError && (
+                <Typography variant='caption' color='error'>
+                  File is required
+                </Typography>
+              )}
             </Grid>
 
             <Grid item xs={12}>

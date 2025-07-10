@@ -75,6 +75,9 @@ const FormValidationAsync = () => {
     formState: { errors }
   } = useForm({ defaultValues })
 
+  const [filePoSpkPksError, setFilePoSpkPksError] = useState(false)
+  const [fileBoqError, setFileBoqError] = useState(false)
+
   const onSubmit = async data => {
     // const formData = new FormData()
     if (data.tanggal_po_spk_pks) {
@@ -93,6 +96,20 @@ const FormValidationAsync = () => {
         formData.append(key, data[key])
       }
     }
+
+    if (!filePoSpkPks || filePoSpkPks.length === 0) {
+        setFilePoSpkPksError(true)
+        return
+      }
+         setFilePoSpkPksError(false)
+
+    if (!fileBoq || fileBoq.length === 0) {
+        setFileBoqError(true)
+        return
+      }
+         setFileBoqError(false)
+
+
 
     // formData.append('is_lop', 1)
 
@@ -115,6 +132,9 @@ const FormValidationAsync = () => {
     }
   }
 
+  
+
+
   return (
     <Card>
       <CardHeader title='PO Baru' />
@@ -130,24 +150,25 @@ const FormValidationAsync = () => {
                   render={({ field: { value, onChange } }) => (
                     <CustomAutocomplete
                       fullWidth
-                      color={'secondary'}
+                      color='secondary'
                       options={data_plan}
                       id='plan_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya id
+                      onChange={(event, newValue) => onChange(newValue ? newValue.uuid : '')}
                       getOptionLabel={option => option.judul || ''}
-                      value={data_plan.find(option => option.id === value) || null} // Temukan objek berdasarkan id
+                      value={data_plan.find(option => option.uuid === value) || null}
                       renderInput={params => (
                         <CustomTextField
-                          placeholder='Plan A'
                           {...params}
+                          placeholder='Plan A'
                           label='Nama Plan'
                           error={Boolean(errors.plan_id)}
-                          {...(errors.plan_id && { helperText: 'This field is required' })}
+                          helperText={errors.plan_id && 'This field is required'}
                         />
                       )}
                     />
                   )}
                 />
+
               </Grid>
 
               <Grid item xs={12}>
@@ -206,10 +227,9 @@ const FormValidationAsync = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6}  >
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
-                  {' '}
-                  Upload File PO SPK PKS{' '}
+                  Upload File PO SPK PKS
                 </Typography>
                 <InputFileUpload
                   label='PO SPK PKS'
@@ -217,7 +237,13 @@ const FormValidationAsync = () => {
                   files={filePoSpkPks}
                   setFiles={setFilePoSpkPks}
                 />
+                {filePoSpkPksError && (
+                  <Typography variant='caption' color='error'>
+                    File is required
+                  </Typography>
+                )}
               </Grid>
+
 
               <Grid item xs={12} sm={4}>
                 <Controller
@@ -256,12 +282,16 @@ const FormValidationAsync = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+             <Grid item xs={12} sm={6} >
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
-                  {' '}
-                  Upload File BOQ{' '}
+                  Upload File BOQ
                 </Typography>
                 <InputFileUpload label='BOQ' id='file_boq' files={fileBoq} setFiles={setFileBoq} />
+                {fileBoqError && (
+                  <Typography variant='caption' color='error'>
+                    File is required
+                  </Typography>
+                )}
               </Grid>
 
               <Grid item xs={12}>

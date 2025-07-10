@@ -131,9 +131,9 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, data_owner_type, 
                       color={'secondary'}
                       options={data_po}
                       id='po_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya id
+                      onChange={(event, newValue) => onChange(newValue ? newValue.uuid : '')} // Simpan hanya id
                       getOptionLabel={option => option.nama_pekerjaan || ''}
-                      value={data_po.find(option => option.id === value) || null} // Temukan objek berdasarkan title
+                      value={data_po.find(option => option.uuid === value) || null} // Temukan objek berdasarkan title
                       renderInput={params => (
                         <CustomTextField
                           placeholder='po laptop'
@@ -253,9 +253,9 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, data_owner_type, 
                       color={'secondary'}
                       options={data_owner_type}
                       id='owner_type'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya title
+                      onChange={(event, newValue) => onChange(newValue ? newValue.uuid : '')} // Simpan hanya title
                       getOptionLabel={option => option.type || ''}
-                      value={data_owner_type.find(option => option.id === value) || null} // Temukan objek berdasarkan title
+                      value={data_owner_type.find(option => option.uuid === value) || null} // Temukan objek berdasarkan title
                       renderInput={params => (
                         <CustomTextField
                           placeholder='PINS'

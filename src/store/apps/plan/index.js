@@ -67,14 +67,16 @@ export const appPlanSlice = createSlice({
         state.data = searchPlan(state.allData, action?.payload?.params?.q)
       })
       .addCase(editData.fulfilled, (state, action) => {
-        const index = state.data.findIndex(item => item.id === action.payload.data.id)
+        const updatedItem = action.payload.data
+        const index = state.data.findIndex(item => item.uuid === updatedItem.uuid)
         if (index !== -1) {
-          state.data[index] = action.payload.data
+          state.data[index] = updatedItem
         }
       })
+
       .addCase(deleteData.fulfilled, (state, action) => {
         state.allData = state.allData.filter(item => item.id !== action.payload.id)
-        state.data = searchType(state.allData, state.params.query || '')
+        state.data = state.allData // Tidak perlu filter
         state.total = state.allData.length
       })
   }

@@ -147,20 +147,32 @@ const PurchaseOrderTable = () => {
     setValue(val)
   }, [])
 
-  const handleEditPurchaseOrder = async data => {
+  const handleEditPurchaseOrder = async () => {
+    const formData = new FormData()
+    formData.append('_method', 'PATCH')
+
+    for (const key in editValue) {
+      formData.append(key, editValue[key])
+    }
+
     try {
-      await dispatch(editData(data)).unwrap()
+      await dispatch(editData(formData)).unwrap()
       toast.success('Purchase order berhasil diedit!')
+
+      // Refresh data setelah edit
+      dispatch(fetchData({ q: value }))
+
+      // Tutup dialog setelah sukses
+      setEditDialogOpen(false)
     } catch (error) {
       console.error('Gagal mengedit purchase order:', error)
       toast.error('Gagal mengedit purchase order!')
     }
-    setEditDialogOpen(false)
   }
 
   const handleDialogToggle = row => {
     setEditValue({
-      id: row.id,
+      id: row.uuid,
       plan_id: row.plan_id,
       nama_pekerjaan: row.nama_pekerjaan,
       no_po_spk_pks: row.no_po_spk_pks,
@@ -185,6 +197,7 @@ const PurchaseOrderTable = () => {
     e.preventDefault()
     const formData = new FormData()
     formData.append('_method', 'PATCH')
+    formData.append('uuid', editValue.id)
     for (const key in editValue) {
       formData.append(key, editValue[key])
     }
@@ -197,6 +210,7 @@ const PurchaseOrderTable = () => {
     }
 
     // Logika update po
+
     handleEditPurchaseOrder(formData)
     setEditDialogOpen(false)
   }
@@ -243,6 +257,8 @@ const PurchaseOrderTable = () => {
     }
   ]
 
+  console.log('Data: ', store.data)
+
   return (
     <>
       <Grid container spacing={6}>
@@ -261,7 +277,7 @@ const PurchaseOrderTable = () => {
               >
                 <DataGrid
                   autoHeight
-                  rows={store.data}
+                  rows={store.data.map(row => ({ ...row, id: row.uuid }))}
                   columns={columns}
                   disableRowSelectionOnClick
                   pageSizeOptions={[10, 25, 50]}
@@ -313,7 +329,7 @@ const PurchaseOrderTable = () => {
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                     getOptionLabel={option => option.judul || ''}
                     onChange={(e, value) => setEditValue({ ...editValue, plan_id: value.id })}
-                    renderInput={params => <CustomTextField placeholder='Printer' {...params} label='Tipe Aset' />}
+                    renderInput={params => <CustomTextField placeholder='Printer' {...params} label='Nama Plan: ' />}
                   />
                 </Grid>
                 {/* <Grid item xs={12}>

@@ -33,7 +33,9 @@ const InputFileUploadBtn = ({ files, setFiles, accept = '.pdf,.jpg,.png,.jpeg,.g
     const file = event.target.files[0]
     console.log(file)
     if (file) {
-      const isValidType = accept.split(',').includes(file.type)
+      // const isValidType = accept.split(',').includes(file.type)
+      const isValidType = accept.split(',').some(ext => file.name.toLowerCase().endsWith(ext.trim()))
+
 
       // const isValidType = ['application/pdf', 'image/png', 'image/jpeg', 'image/gif'].includes(file.type)
       const isValidSize = file.size <= 2 * 1024 * 1024 // 2 MB

@@ -16,6 +16,7 @@ export const addData = createAsyncThunk('appPurchaseOrder/addData', async newPur
 })
 
 export const editData = createAsyncThunk('appPurchaseOrder/editData', async updatedPurchaseOrder => {
+  
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}po`, updatedPurchaseOrder)
 
   return response.data

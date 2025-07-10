@@ -118,6 +118,8 @@ const PlanTable = () => {
     )
   }, [dispatch, value])
 
+  console.log('DATA PLAN:', store.data)
+
   const handleFilter = useCallback(
     val => {
       setValue(val)
@@ -130,6 +132,9 @@ const PlanTable = () => {
     try {
       await dispatch(editData(data)).unwrap()
       toast.success('Plan berhasil diedit!')
+
+      // ✅ Refresh data setelah berhasil update
+      dispatch(fetchData({ q: value }))
     } catch (error) {
       console.error('Gagal mengedit plan:', error)
       toast.error('Gagal mengedit plan!')
@@ -137,7 +142,10 @@ const PlanTable = () => {
     setEditDialogOpen(false)
   }
 
-  const handleDialogToggle = row => {
+  const handleOpenDialog = async row => {
+    await dispatch(fetchVariety({ q: '' }))
+    await dispatch(fetchType({ q: '' }))
+
     setEditValue({
       judul: row.judul,
       nama_barang: row.nama_barang,
@@ -149,18 +157,12 @@ const PlanTable = () => {
       is_lop: 1,
       id: row.id
     })
-    dispatch(
-      fetchVariety({
-        q: value
-      })
-    )
-    dispatch(
-      fetchType({
-        q: value
-      })
-    )
 
-    setEditDialogOpen(!editDialogOpen)
+    setEditDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setEditDialogOpen(false)
   }
 
   const onSubmit = e => {
@@ -178,14 +180,20 @@ const PlanTable = () => {
 
   const handleDelete = async id => {
     try {
-      const result = await dispatch(deleteData(id)).unwrap()
+      await dispatch(deleteData(id)).unwrap()
       toast.success('Plan berhasil dihapus!')
-      window.location.reload()
+
+      // Langsung fetch ulang data tanpa reload
+      dispatch(fetchData({ q: value }))
     } catch (error) {
       console.error('Gagal menghapus Plan:', error)
       toast.error('Gagal menghapus Plan!')
     }
   }
+
+  console.log('ISI editValue:', editValue)
+  console.log('ISI type.data:', type.data)
+  console.log('Variety data: ', variety.data)
 
   const columns = [
     ...defaultColumns,
@@ -198,7 +206,7 @@ const PlanTable = () => {
       headerName: 'Actions',
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton onClick={() => handleDialogToggle(row)}>
+          <IconButton onClick={() => handleOpenDialog(row)}>
             <Icon icon='tabler:edit' />
           </IconButton>
           <IconButton onClick={() => handleDelete(row.id)}>
@@ -227,7 +235,7 @@ const PlanTable = () => {
               >
                 <DataGrid
                   autoHeight
-                  rows={store.data}
+                  rows={store.data.map(row => ({ ...row, row_id: row.id, id: row.uuid }))} // ← mapping manual
                   columns={columns}
                   disableRowSelectionOnClick
                   pageSizeOptions={[10, 25, 50]}
@@ -240,7 +248,7 @@ const PlanTable = () => {
         </Grid>
       </Grid>
 
-      <Dialog maxWidth='md' fullWidth onClose={handleDialogToggle} open={editDialogOpen}>
+      <Dialog maxWidth='md' fullWidth onClose={handleCloseDialog} open={editDialogOpen}>
         <DropzoneWrapper>
           <DialogTitle
             sx={{
@@ -255,8 +263,9 @@ const PlanTable = () => {
           </DialogTitle>
           <DialogContent
             sx={{
+              textAlign: 'center',
               px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`],
-              pb: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
+              pt: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
             }}
           >
             <Box component='form' onSubmit={onSubmit}>
@@ -283,25 +292,32 @@ const PlanTable = () => {
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <CustomAutocomplete
-                    fullWidth
-                    color={'secondary'}
-                    value={variety.data.find(option => option.id === editValue.jenis_barang_id) || null}
-                    options={variety.data}
-                    sx={{ mr: [0, 4], mb: [3, 5] }}
-                    getOptionLabel={option => option.nama || ''}
-                    onChange={(e, value) => setEditValue({ ...editValue, jenis_barang_id: value.id })}
-                    renderInput={params => (
-                      <CustomTextField
-                        placeholder='Printer'
-                        {...params}
-                        label='Jenis Aset'
+                  {variety.data.length > 0 && (
+                    <CustomAutocomplete
+                      fullWidth
+                      color='secondary'
+                      value={variety.data.find(option => option.id === editValue.jenis_barang_id) || null}
+                      options={variety.data}
+                      getOptionLabel={option => option.nama || ''}
+                      onChange={(e, value) => {
+                        if (value) {
+                          setEditValue({ ...editValue, jenis_barang_id: value.id })
+                        }
+                      }}
+                      renderInput={params => (
+                        <CustomTextField
+                          {...params}
+                          label='Jenis Aset'
+                          placeholder={
+                            variety.data.find(option => option.id === editValue.jenis_barang_id)?.nama ||
+                            'Pilih Jenis Aset'
+                          }
+                        />
+                      )}
+                      sx={{ mr: [0, 4], mb: [3, 5] }}
+                    />
+                  )}
 
-                        // error={Boolean(errors.jenis_barang_id)}
-                        // {...(errors.jenis_barang_id && { helperText: 'This field is required' })}
-                      />
-                    )}
-                  />
                   {/* <CustomTextField
                     fullWidth
                     color={'secondary'}
@@ -315,23 +331,29 @@ const PlanTable = () => {
                 <Grid item xs={12}>
                   <CustomAutocomplete
                     fullWidth
-                    color={'secondary'}
-                    value={type.data.find(option => option.id === editValue.tipe_barang_id) || null}
+                    color='secondary'
+                    value={type.data.find(option => String(option.id) === editValue.tipe_barang_id) || null}
                     options={type.data}
-                    sx={{ mr: [0, 4], mb: [3, 5] }}
                     getOptionLabel={option => option.nama || ''}
-                    onChange={(e, value) => setEditValue({ ...editValue, tipe_barang_id: value.id })}
+                    onChange={(e, value) => {
+                      console.log('Dipilih:', value)
+                      if (value) {
+                        setEditValue({ ...editValue, tipe_barang_id: value.id }) // yang sekarang sudah uuid
+                      }
+                    }}
                     renderInput={params => (
                       <CustomTextField
-                        placeholder='Printer'
                         {...params}
                         label='Tipe Aset'
-
-                        // error={Boolean(errors.jenis_barang_id)}
-                        // {...(errors.jenis_barang_id && { helperText: 'This field is required' })}
+                        //placeholder='Pilih tipe aset'
+                        placeholder={
+                          type.data.find(option => option.id === editValue.tipe_barang_id)?.nama || 'Pilih Tipe Aset'
+                        }
                       />
                     )}
+                    sx={{ mr: [0, 4], mb: [3, 5] }}
                   />
+
                   {/* <CustomTextField
                     fullWidth
                     color={'secondary'}
