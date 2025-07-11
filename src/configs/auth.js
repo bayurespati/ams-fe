@@ -1,11 +1,7 @@
-export default {
-  // meEndpoint: '/auth/me',
-
-  // loginEndpoint: '/jwt/login',
-  loginEndpoint: '/auth/token/request',
-  detailEndpoint: 'auth/token/detail',
-  registerEndpoint: '/jwt/register',
-  storageTokenKeyName: 'accessToken',
-  onTokenExpiration: 'refreshToken', // logout | refreshToken
-  userData: 'userData'
+const authConfig = {
+  meEndpoint: `${process.env.NEXT_PUBLIC_BASE_URL}auth/token/check`,
+  detailUser: `${process.env.NEXT_PUBLIC_BASE_URL}auth/token/detail`,
+  onTokenExpiration: 'logout'
 }
+
+export default authConfig
