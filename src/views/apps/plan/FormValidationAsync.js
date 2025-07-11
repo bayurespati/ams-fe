@@ -1,5 +1,6 @@
 // ** React Imports
 import { useState } from 'react'
+import { useRouter } from 'next/router'
 
 // ** MUI Imports
 import Card from '@mui/material/Card'
@@ -53,9 +54,9 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
     formState: { errors }
   } = useForm({ defaultValues })
 
-  const onSubmit = async data => {
-    // const formData = new FormData()
+  const router = useRouter() // Tambahkan ini di dalam komponen FormValidationAsync
 
+  const onSubmit = async data => {
     if (!filePrpo || filePrpo.length === 0) {
       setFileError(true)
       return
@@ -70,17 +71,17 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
     if (filePrpo) {
       formData.append('file_prpo', filePrpo)
     }
+
     setLoading(true)
     try {
-      // dispatch(addData(formData))
-
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, formData, {
+      await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
 
       toast.success('Form Submitted')
+      router.push('/plan') // 👉 Redirect ke halaman plans setelah sukses
     } catch (error) {
       toast.error('Error')
       console.log(error)
@@ -155,14 +156,13 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
                       options={data_jenis_barang}
                       id='jenis_barang_id'
                       onChange={(event, newValue) => {
-                        console.log('🟣 Selected option:', newValue)
                         onChange(newValue ? newValue.id : '')
                       }}
                       getOptionLabel={option => option.nama || ''}
                       value={data_jenis_barang.find(option => option.id === value) || null}
                       renderInput={params => (
                         <CustomTextField
-                          placeholder='Printer'
+                          placeholder='Pilih Jenis Aset'
                           {...params}
                           label='Jenis Aset'
                           error={Boolean(errors.jenis_barang_id)}
