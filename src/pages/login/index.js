@@ -5,9 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 // ** MUI Components
-import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
-import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -48,25 +46,15 @@ const LoginIllustration = styled('img')(({ theme }) => ({
   maxHeight: 680,
   marginTop: theme.spacing(12),
   marginBottom: theme.spacing(12),
-  [theme.breakpoints.down(1540)]: {
-    maxHeight: 550
-  },
-  [theme.breakpoints.down('lg')]: {
-    maxHeight: 500
-  }
+  [theme.breakpoints.down(1540)]: { maxHeight: 550 },
+  [theme.breakpoints.down('lg')]: { maxHeight: 500 }
 }))
 
 const RightWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
-  [theme.breakpoints.up('md')]: {
-    maxWidth: 450
-  },
-  [theme.breakpoints.up('lg')]: {
-    maxWidth: 600
-  },
-  [theme.breakpoints.up('xl')]: {
-    maxWidth: 750
-  }
+  [theme.breakpoints.up('md')]: { maxWidth: 450 },
+  [theme.breakpoints.up('lg')]: { maxWidth: 600 },
+  [theme.breakpoints.up('xl')]: { maxWidth: 750 }
 }))
 
 const LinkStyled = styled(Link)(({ theme }) => ({
@@ -80,29 +68,27 @@ const FormControlLabel = styled(MuiFormControlLabel)(({ theme }) => ({
   }
 }))
 
+// ** Validation
 const schema = yup.object().shape({
-  username: yup.string().required(),
-  password: yup.string().min(5).required()
+  username: yup.string().required('Username is required'),
+  password: yup.string().min(5, 'Minimum 5 characters').required('Password is required')
 })
 
 const defaultValues = {
-  password: `${process.env.NEXT_PUBLIC_APP_PASSWORD}`,
-  username: `${process.env.NEXT_PUBLIC_APP_USERNAME}`
+  username: '',
+  password: ''
 }
 
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false) // ✅ prevent double click
 
-  // ** Hooks
   const auth = useAuth()
   const theme = useTheme()
   const bgColors = useBgColor()
   const { settings } = useSettings()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
-
-  // ** Vars
-  const { skin } = settings
 
   const {
     control,
@@ -115,36 +101,51 @@ const LoginPage = () => {
     resolver: yupResolver(schema)
   })
 
-  const onSubmit = data => {
+  const onSubmit = async data => {
+    if (isSubmitting) return // ✅ prevent multiple clicks
+    setIsSubmitting(true)
+
     const { username, password } = data
-    auth.login({ username, password }, () => {
-      setError('username', {
-        type: 'manual',
-        message: 'username or Password is invalid'
+    try {
+      await auth.login({ username, password, rememberMe }, err => {
+        setError('username', {
+          type: 'manual',
+          message: 'Username or password is invalid'
+        })
+        setIsSubmitting(false) // Reset on error
       })
-    })
+    } catch (err) {
+      setIsSubmitting(false)
+    }
   }
-  const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
+
+  const imageSource = settings.skin === 'bordered'
+    ? 'auth-v2-login-illustration-bordered'
+    : 'auth-v2-login-illustration'
 
   return (
     <Box className='content-right' sx={{ backgroundColor: 'background.paper' }}>
-      {!hidden ? (
+      {!hidden && (
         <Box
           sx={{
             flex: 1,
             display: 'flex',
             position: 'relative',
             alignItems: 'center',
-            borderRadius: '20px',
             justifyContent: 'center',
+            borderRadius: '20px',
             backgroundColor: 'customColors.bodyBg',
-            margin: theme => theme.spacing(8, 0, 8, 8)
+            m: theme => theme.spacing(8, 0, 8, 8)
           }}
         >
-          <LoginIllustration alt='login-illustration' src={`/images/pages/${imageSource}-${theme.palette.mode}.png`} />
+          <LoginIllustration
+            alt='login-illustration'
+            src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
+          />
           <FooterIllustrationsV2 />
         </Box>
-      ) : null}
+      )}
+
       <RightWrapper>
         <Box
           sx={{
@@ -163,89 +164,61 @@ const LoginPage = () => {
                 fill={theme.palette.primary.main}
                 d='M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z'
               />
-              <path
-                fill='#161616'
-                opacity={0.06}
-                fillRule='evenodd'
-                clipRule='evenodd'
-                d='M7.69824 16.4364L12.5199 3.23696L16.5541 7.25596L7.69824 16.4364Z'
-              />
-              <path
-                fill='#161616'
-                opacity={0.06}
-                fillRule='evenodd'
-                clipRule='evenodd'
-                d='M8.07751 15.9175L13.9419 4.63989L16.5849 7.28475L8.07751 15.9175Z'
-              />
-              <path
-                fillRule='evenodd'
-                clipRule='evenodd'
-                fill={theme.palette.primary.main}
-                d='M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z'
-              />
+              <path fill='#161616' opacity={0.06} fillRule='evenodd' clipRule='evenodd' d='M7.69824 16.4364L12.5199 3.23696L16.5541 7.25596L7.69824 16.4364Z' />
+              <path fill='#161616' opacity={0.06} fillRule='evenodd' clipRule='evenodd' d='M8.07751 15.9175L13.9419 4.63989L16.5849 7.28475L8.07751 15.9175Z' />
+              <path fillRule='evenodd' clipRule='evenodd' fill={theme.palette.primary.main} d='M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z' />
             </svg>
+
             <Box sx={{ my: 6 }}>
               <Typography variant='h3' sx={{ mb: 1.5 }}>
                 {`Welcome to ${themeConfig.templateName}! 👋🏻`}
               </Typography>
               <Typography sx={{ color: 'text.secondary' }}>
-                Please sign-in to your account and start the adventure
+                Please sign in to your account to continue
               </Typography>
             </Box>
-            <Alert icon={false} sx={{ py: 3, mb: 6, ...bgColors.primaryLight, '& .MuiAlert-message': { p: 0 } }}>
-              <Typography variant='body2' sx={{ mb: 2, color: 'primary.main' }}>
-                Admin: <strong>admin@vuexy.com</strong> / Pass: <strong>admin</strong>
-              </Typography>
-              <Typography variant='body2' sx={{ color: 'primary.main' }}>
-                Client: <strong>client@vuexy.com</strong> / Pass: <strong>client</strong>
-              </Typography>
-            </Alert>
+
             <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
               <Box sx={{ mb: 4 }}>
                 <Controller
                   name='username'
                   control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur } }) => (
+                  render={({ field }) => (
                     <CustomTextField
                       fullWidth
                       autoFocus
-                      label='username'
-                      value={value}
-                      onBlur={onBlur}
-                      onChange={onChange}
-                      placeholder='admin@vuexy.com'
+                      label='Username'
+                      placeholder='Enter your username'
+                      {...field}
                       error={Boolean(errors.username)}
-                      {...(errors.username && { helperText: errors.username.message })}
+                      helperText={errors.username?.message}
                     />
                   )}
                 />
               </Box>
+
               <Box sx={{ mb: 1.5 }}>
                 <Controller
                   name='password'
                   control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur } }) => (
+                  render={({ field }) => (
                     <CustomTextField
                       fullWidth
-                      value={value}
-                      onBlur={onBlur}
-                      label='Password'
-                      onChange={onChange}
-                      id='auth-login-v2-password'
-                      error={Boolean(errors.password)}
-                      {...(errors.password && { helperText: errors.password.message })}
                       type={showPassword ? 'text' : 'password'}
+                      label='Password'
+                      placeholder='Enter your password'
+                      {...field}
+                      error={Boolean(errors.password)}
+                      helperText={errors.password?.message}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position='end'>
                             <IconButton
                               edge='end'
-                              onMouseDown={e => e.preventDefault()}
                               onClick={() => setShowPassword(!showPassword)}
+                              onMouseDown={e => e.preventDefault()}
                             >
-                              <Icon fontSize='1.25rem' icon={showPassword ? 'tabler:eye' : 'tabler:eye-off'} />
+                              <Icon icon={showPassword ? 'tabler:eye' : 'tabler:eye-off'} fontSize='1.25rem' />
                             </IconButton>
                           </InputAdornment>
                         )
@@ -254,61 +227,35 @@ const LoginPage = () => {
                   )}
                 />
               </Box>
+
               <Box
                 sx={{
                   mb: 1.75,
                   display: 'flex',
-                  flexWrap: 'wrap',
                   alignItems: 'center',
                   justifyContent: 'space-between'
                 }}
               >
                 <FormControlLabel
                   label='Remember Me'
-                  control={<Checkbox checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />}
+                  control={
+                    <Checkbox
+                      checked={rememberMe}
+                      onChange={e => setRememberMe(e.target.checked)}
+                    />
+                  }
                 />
-                {/* <Typography component={LinkStyled} href='/forgot-password'>
-                  Forgot Password?
-                </Typography> */}
               </Box>
-              <Button fullWidth type='submit' variant='contained' sx={{ mb: 4 }}>
-                Login
-              </Button>
-              {/* <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <Typography sx={{ color: 'text.secondary', mr: 2 }}>New on our platform?</Typography>
-                <Typography href='/register' component={LinkStyled}>
-                  Create an account
-                </Typography>
-              </Box> */}
-              {/* <Divider
-                sx={{
-                  color: 'text.disabled',
-                  '& .MuiDivider-wrapper': { px: 6 },
-                  fontSize: theme.typography.body2.fontSize,
-                  my: theme => `${theme.spacing(6)} !important`
-                }}
+
+              <Button
+                fullWidth
+                type='submit'
+                variant='contained'
+                sx={{ mb: 4 }}
+                disabled={isSubmitting} // ✅ Disable button saat login
               >
-                or
-              </Divider>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton href='/' component={Link} sx={{ color: '#497ce2' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:facebook' />
-                </IconButton>
-                <IconButton href='/' component={Link} sx={{ color: '#1da1f2' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:twitter' />
-                </IconButton>
-                <IconButton
-                  href='/'
-                  component={Link}
-                  onClick={e => e.preventDefault()}
-                  sx={{ color: theme => (theme.palette.mode === 'light' ? '#272727' : 'grey.300') }}
-                >
-                  <Icon icon='mdi:github' />
-                </IconButton>
-                <IconButton href='/' component={Link} sx={{ color: '#db4437' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:google' />
-                </IconButton>
-              </Box> */}
+                {isSubmitting ? 'Logging in...' : 'Login'}
+              </Button>
             </form>
           </Box>
         </Box>
@@ -316,6 +263,7 @@ const LoginPage = () => {
     </Box>
   )
 }
+
 LoginPage.getLayout = page => <BlankLayout>{page}</BlankLayout>
 LoginPage.guestGuard = true
 
