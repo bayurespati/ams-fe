@@ -10,6 +10,7 @@ import type from './apps/type'
 import purchaseOrder from './apps/purchase-order'
 import asetMasuk from './apps/aset-masuk'
 import itemDoin from './apps/item-doin'
+import company from './apps/company' // ✅ Tambahkan ini
 
 export const store = configureStore({
   reducer: {
@@ -20,7 +21,8 @@ export const store = configureStore({
     type,
     purchaseOrder,
     asetMasuk,
-    itemDoin
+    itemDoin,
+    company // ✅ Tambahkan ini
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
