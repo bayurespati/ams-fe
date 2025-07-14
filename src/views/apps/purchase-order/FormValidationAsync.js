@@ -80,6 +80,7 @@ const FormValidationAsync = () => {
 
   const onSubmit = async data => {
     // const formData = new FormData()
+    console.log('Data dikirim:', data)
     if (data.tanggal_po_spk_pks) {
       data.tanggal_po_spk_pks = format(new Date(data.tanggal_po_spk_pks), 'yyyy-MM-dd')
     }
@@ -98,18 +99,16 @@ const FormValidationAsync = () => {
     }
 
     if (!filePoSpkPks || filePoSpkPks.length === 0) {
-        setFilePoSpkPksError(true)
-        return
-      }
-         setFilePoSpkPksError(false)
+      setFilePoSpkPksError(true)
+      return
+    }
+    setFilePoSpkPksError(false)
 
     if (!fileBoq || fileBoq.length === 0) {
-        setFileBoqError(true)
-        return
-      }
-         setFileBoqError(false)
-
-
+      setFileBoqError(true)
+      return
+    }
+    setFileBoqError(false)
 
     // formData.append('is_lop', 1)
 
@@ -124,6 +123,7 @@ const FormValidationAsync = () => {
       })
 
       toast.success('Form Submitted')
+      router.push('/purchase-order')
     } catch (error) {
       toast.error('Error')
       console.log(error)
@@ -131,9 +131,6 @@ const FormValidationAsync = () => {
       setLoading(false)
     }
   }
-
-  
-
 
   return (
     <Card>
@@ -153,9 +150,9 @@ const FormValidationAsync = () => {
                       color='secondary'
                       options={data_plan}
                       id='plan_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.uuid : '')}
+                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')}
                       getOptionLabel={option => option.judul || ''}
-                      value={data_plan.find(option => option.uuid === value) || null}
+                      value={data_plan.find(option => option.id === value) || null}
                       renderInput={params => (
                         <CustomTextField
                           {...params}
@@ -168,7 +165,6 @@ const FormValidationAsync = () => {
                     />
                   )}
                 />
-
               </Grid>
 
               <Grid item xs={12}>
@@ -227,7 +223,7 @@ const FormValidationAsync = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}  >
+              <Grid item xs={12} sm={6}>
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
                   Upload File PO SPK PKS
                 </Typography>
@@ -243,7 +239,6 @@ const FormValidationAsync = () => {
                   </Typography>
                 )}
               </Grid>
-
 
               <Grid item xs={12} sm={4}>
                 <Controller
@@ -282,7 +277,7 @@ const FormValidationAsync = () => {
                 />
               </Grid>
 
-             <Grid item xs={12} sm={6} >
+              <Grid item xs={12} sm={6}>
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
                   Upload File BOQ
                 </Typography>

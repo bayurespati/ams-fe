@@ -11,21 +11,38 @@ export const fetchData = createAsyncThunk('appPlan/fetchData', async params => {
 
 export const addData = createAsyncThunk('appPlan/addData', async newPlan => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, newPlan)
-
   return response.data
 })
 
 export const editData = createAsyncThunk('appPlan/editData', async updatedPlan => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, updatedPlan)
-
   return response.data
 })
 
 export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
-  const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, { data: { id: id } })
+  const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, {
+    data: { id: id }
+  })
 
   return { message: response.data.message, id }
 })
+
+// ✅ Tambahkan helper
+const replaceUuidWithId = data => {
+  return data.map(item => {
+    const { uuid, ...rest } = item
+    return { id: uuid, ...rest }
+  })
+}
+
+const replaceSingleUuidWithId = data => {
+  if (!data) {
+    console.error('replaceSingleUuidWithId: received undefined data')
+    return {}
+  }
+  const { uuid, ...rest } = data
+  return { id: uuid, ...rest }
+}
 
 const searchPlan = (data, query) => {
   const queryLowered = query.toLowerCase()
@@ -49,34 +66,36 @@ export const appPlanSlice = createSlice({
   reducers: {
     setSearchQuery: (state, action) => {
       const { query } = action.payload
-      state.data = searchPlan(state.data, query)
+      state.data = searchPlan(state.allData, query)
     }
   },
   extraReducers: builder => {
-    builder.addCase(fetchData.fulfilled, (state, action) => {
-      state.params = action.payload.params
-      state.allData = action.payload.data
-      state.total = action.payload.data.length
-      state.data = searchPlan(state.allData, action?.payload?.params?.q)
-    })
     builder
-      .addCase(addData.fulfilled, (state, action) => {
+      .addCase(fetchData.fulfilled, (state, action) => {
+        const newData = replaceUuidWithId(action.payload.data)
         state.params = action.payload.params
-        state.allData = action.payload.data
-        state.total = action.payload.data.length
-        state.data = searchPlan(state.allData, action?.payload?.params?.q)
+        state.allData = newData
+        state.total = newData.length
+        state.data = searchPlan(newData, action?.payload?.params?.q || '')
+      })
+      .addCase(addData.fulfilled, (state, action) => {
+        const newItem = replaceSingleUuidWithId(action.payload.data)
+        state.data.push(newItem)
+        state.allData.push(newItem)
+        state.total++
       })
       .addCase(editData.fulfilled, (state, action) => {
-        const updatedItem = action.payload.data
-        const index = state.data.findIndex(item => item.uuid === updatedItem.uuid)
+        const updatedItem = replaceSingleUuidWithId(action.payload.data)
+        const index = state.data.findIndex(item => item.id === updatedItem.id)
         if (index !== -1) {
           state.data[index] = updatedItem
+          const allIndex = state.allData.findIndex(item => item.id === updatedItem.id)
+          if (allIndex !== -1) state.allData[allIndex] = updatedItem
         }
       })
-
       .addCase(deleteData.fulfilled, (state, action) => {
         state.allData = state.allData.filter(item => item.id !== action.payload.id)
-        state.data = state.allData // Tidak perlu filter
+        state.data = state.allData
         state.total = state.allData.length
       })
   }

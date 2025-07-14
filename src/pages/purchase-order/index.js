@@ -102,7 +102,11 @@ const defaultColumns = [
     field: 'cost_center',
     headerClassName: 'super-app-theme--header',
     headerName: 'cost_center',
-    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.cost_center}</Typography>
+    renderCell: ({ row }) => {
+      console.log(row)
+
+      return <Typography sx={{ color: 'text.secondary' }}>{row.cost_center}</Typography>
+    }
   }
 ]
 
@@ -147,44 +151,79 @@ const PurchaseOrderTable = () => {
     setValue(val)
   }, [])
 
-  const handleEditPurchaseOrder = async () => {
-    const formData = new FormData()
-    formData.append('_method', 'PATCH')
-
-    for (const key in editValue) {
-      formData.append(key, editValue[key])
-    }
-
+  const handleEditPurchaseOrder = async formData => {
     try {
       await dispatch(editData(formData)).unwrap()
       toast.success('Purchase order berhasil diedit!')
-
-      // Refresh data setelah edit
       dispatch(fetchData({ q: value }))
-
-      // Tutup dialog setelah sukses
       setEditDialogOpen(false)
     } catch (error) {
       console.error('Gagal mengedit purchase order:', error)
-      toast.error('Gagal mengedit purchase order!')
+
+      if (
+        error?.response?.data?.errors?.nama_pekerjaan &&
+        error.response.data.errors.nama_pekerjaan.includes('The nama pekerjaan has already been taken.')
+      ) {
+        toast.error('Nama pekerjaan sudah digunakan, silakan pilih nama lain.')
+      } else {
+        toast.error('Gagal mengedit purchase order!')
+      }
+    }
+  }
+
+  // Helper function untuk format tanggal
+  const formatDateToYYYYMMDD = dateValue => {
+    if (!dateValue) return ''
+
+    try {
+      let dateObj
+
+      // Jika sudah Date object
+      if (dateValue instanceof Date) {
+        dateObj = dateValue
+      }
+      // Jika string, convert ke Date
+      else if (typeof dateValue === 'string') {
+        dateObj = new Date(dateValue)
+      }
+      // Jika tidak valid, return empty string
+      else {
+        console.warn('Invalid date value:', dateValue)
+        return ''
+      }
+
+      // Validasi apakah Date object valid
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid date object:', dateObj)
+        return ''
+      }
+
+      // Format manual untuk memastikan format yyyy-MM-dd
+      const year = dateObj.getFullYear()
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+      const day = String(dateObj.getDate()).padStart(2, '0')
+
+      return `${year}-${month}-${day}`
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return ''
     }
   }
 
   const handleDialogToggle = row => {
+    const tanggalPO = new Date(row.tanggal_po_spk_pks)
+    const tanggalDelivery = new Date(row.tanggal_delivery)
+
     setEditValue({
-      id: row.uuid,
+      id: row.id,
       plan_id: row.plan_id,
       nama_pekerjaan: row.nama_pekerjaan,
       no_po_spk_pks: row.no_po_spk_pks,
-      tanggal_po_spk_pks: new Date(row.tanggal_po_spk_pks),
-
-      // file_po_spk_pks: row.file_po_spk_pks,
+      tanggal_po_spk_pks: tanggalPO,
       nilai_pengadaan: row.nilai_pengadaan,
-      tanggal_delivery: new Date(row.tanggal_delivery),
+      tanggal_delivery: tanggalDelivery,
       akun: row.akun,
       cost_center: row.cost_center
-
-      // file_boq: row.file_boq
     })
     setEditDialogOpen(!editDialogOpen)
   }
@@ -196,20 +235,29 @@ const PurchaseOrderTable = () => {
   const onSubmit = e => {
     e.preventDefault()
     const formData = new FormData()
+
     formData.append('_method', 'PATCH')
     formData.append('uuid', editValue.id)
+
     for (const key in editValue) {
-      formData.append(key, editValue[key])
+      if (key === 'tanggal_po_spk_pks') {
+        const formatted = formatDateToYYYYMMDD(editValue[key])
+
+        if (formatted) {
+          formData.append(key, formatted)
+        }
+      } else if (key === 'tanggal_delivery') {
+        const formatted = formatDateToYYYYMMDD(editValue[key])
+
+        if (formatted) {
+          formData.append(key, formatted)
+        }
+      } else {
+        formData.append(key, editValue[key])
+      }
     }
 
-    if (editValue.tanggal_po_spk_pks) {
-      formData.append('tanggal_po_spk_pks', format(editValue.tanggal_po_spk_pks, 'yyyy-MM-dd'))
-    }
-    if (editValue.tanggal_delivery) {
-      formData.append('tanggal_delivery', format(editValue.tanggal_delivery, 'yyyy-MM-dd'))
-    }
-
-    // Logika update po
+    console.log('Edit Value:', editValue)
 
     handleEditPurchaseOrder(formData)
     setEditDialogOpen(false)
@@ -229,6 +277,7 @@ const PurchaseOrderTable = () => {
     try {
       await dispatch(deleteData(id)).unwrap()
       toast.success('PurchaseOrder berhasil dihapus!')
+      dispatch(fetchData({ q: value }))
     } catch (error) {
       console.error('Gagal menghapus PurchaseOrder:', error)
       toast.error('Gagal menghapus PurchaseOrder!')
@@ -257,8 +306,6 @@ const PurchaseOrderTable = () => {
     }
   ]
 
-  console.log('Data: ', store.data)
-
   return (
     <>
       <Grid container spacing={6}>
@@ -277,7 +324,7 @@ const PurchaseOrderTable = () => {
               >
                 <DataGrid
                   autoHeight
-                  rows={store.data.map(row => ({ ...row, id: row.uuid }))}
+                  rows={store.data}
                   columns={columns}
                   disableRowSelectionOnClick
                   pageSizeOptions={[10, 25, 50]}
@@ -332,27 +379,6 @@ const PurchaseOrderTable = () => {
                     renderInput={params => <CustomTextField placeholder='Printer' {...params} label='Nama Plan: ' />}
                   />
                 </Grid>
-                {/* <Grid item xs={12}>
-                  <CustomAutocomplete
-                    fullWidth
-                    color={'secondary'}
-                    value={data_plan.find(option => option.id === editValue.plan_id) || null}
-                    options={data_plan}
-                    sx={{ mr: [0, 4], mb: [3, 5] }}
-                    getOptionLabel={option => option.nama || ''}
-                    onChange={(e, value) => setEditValue({ ...editValue, plan_id: value.id })}
-                    renderInput={params => (
-                      <CustomTextField
-                        placeholder='Printer'
-                        {...params}
-                        label='Plan'
-
-                        // error={Boolean(errors.plan_id)}
-                        // {...(errors.plan_id && { helperText: 'This field is required' })}
-                      />
-                    )}
-                  />
-                </Grid> */}
                 <Grid item xs={12}>
                   <CustomTextField
                     fullWidth
@@ -380,7 +406,11 @@ const PurchaseOrderTable = () => {
                     popperPlacement={popperPlacement}
                     label='Tanggal PO SPK PKS'
                     value={editValue.tanggal_po_spk_pks}
-                    onChange={e => setEditValue({ ...editValue, tanggal_po_spk_pks: e })}
+                    onChange={e => {
+                      console.log('Date picker onChange - PO:', e)
+                      console.log('Type:', typeof e)
+                      setEditValue({ ...editValue, tanggal_po_spk_pks: e })
+                    }}
                   />
                 </Grid>
 
@@ -389,7 +419,11 @@ const PurchaseOrderTable = () => {
                     popperPlacement={popperPlacement}
                     label='Tanggal Delivery'
                     value={editValue.tanggal_delivery}
-                    onChange={e => setEditValue({ ...editValue, tanggal_delivery: e })}
+                    onChange={e => {
+                      console.log('Date picker onChange - Delivery:', e)
+                      console.log('Type:', typeof e)
+                      setEditValue({ ...editValue, tanggal_delivery: e })
+                    }}
                   />
                 </Grid>
 
@@ -436,7 +470,6 @@ const PurchaseOrderTable = () => {
                   </Button>
                 </DialogActions>
               </FormGroup>
-              {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
             </Box>
           </DialogContent>
         </DatePickerWrapper>

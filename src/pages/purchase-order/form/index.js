@@ -37,7 +37,7 @@ const Po = () => {
     <>
       <div role='presentation'>
         <Breadcrumbs aria-label='breadcrumb'>
-          <Link underline='hover' color='inherit' href='/'>
+          <Link underline='hover' color='inherit' href='/purchase-order'>
             Purchase Order
           </Link>
           {/* <Link underline='hover' color='inherit' href='/material-ui/getting-started/installation/'>

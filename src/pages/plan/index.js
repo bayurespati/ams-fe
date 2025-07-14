@@ -235,7 +235,7 @@ const PlanTable = () => {
               >
                 <DataGrid
                   autoHeight
-                  rows={store.data.map(row => ({ ...row, row_id: row.id, id: row.uuid }))} // ← mapping manual
+                  rows={store.data} // id sudah ada langsung di data
                   columns={columns}
                   disableRowSelectionOnClick
                   pageSizeOptions={[10, 25, 50]}
