@@ -77,6 +77,11 @@ const navigation = () => {
         {
           title: 'Brand',
           path: '/pengaturan/brand',
+          auth: false,
+        },
+        {
+          title: 'Company',
+          path: '/pengaturan/company',
           auth: false
         }
       ],

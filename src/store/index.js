@@ -11,6 +11,7 @@ import purchaseOrder from './apps/purchase-order'
 import asetMasuk from './apps/aset-masuk'
 import itemDoin from './apps/item-doin'
 import brand from 'src/store/apps/brand'
+import company from './apps/company'
 
 export const store = configureStore({
   reducer: {
@@ -22,7 +23,8 @@ export const store = configureStore({
     purchaseOrder,
     asetMasuk,
     itemDoin,
-    brand
+    brand,
+    company
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
