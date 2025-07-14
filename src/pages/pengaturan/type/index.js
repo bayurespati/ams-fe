@@ -36,6 +36,14 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 // ** Actions Imports
 import { fetchData, addData, editData, setSearchQuery, deleteData, restoreGarbage } from 'src/store/apps/type'
 
+const colors = {
+  support: 'info',
+  users: 'success',
+  manager: 'warning',
+  administrator: 'primary',
+  'restricted-user': 'error'
+}
+
 const defaultColumns = [
   {
     flex: 0.15,
@@ -45,24 +53,39 @@ const defaultColumns = [
     headerName: 'Nama',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.nama}</Typography>
   }
+
+  // {
+  //   flex: 0.15,
+  //   minWidth: 290,
+  //   field: 'alias',
+  //   headerClassName: 'super-app-theme--header',
+  //   headerName: 'Alias',
+  //   renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.alias}</Typography>
+  // }
 ]
 
 const TypeTable = () => {
+  // ** State
   const [value, setValue] = useState('')
   const [editValue, setEditValue] = useState({ id: '', nama: '' })
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
   const [tab, setTab] = useState('1')
 
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue)
+  }
+
+  // ** Hooks
   const dispatch = useDispatch()
   const store = useSelector(state => state.type)
 
-  const refreshData = () => {
-    dispatch(fetchData({ q: value }))
-  }
-
   useEffect(() => {
-    refreshData()
+    dispatch(
+      fetchData({
+        q: value
+      })
+    )
   }, [dispatch, value])
 
   const handleFilter = useCallback(
@@ -73,12 +96,9 @@ const TypeTable = () => {
     [dispatch]
   )
 
-  const handleTabChange = (event, newValue) => {
-    setTab(newValue)
-  }
-
   const handleEditPermission = row => {
     setEditValue({ id: row.id, nama: row.nama })
+
     setEditDialogOpen(true)
   }
 
@@ -86,18 +106,19 @@ const TypeTable = () => {
     try {
       await dispatch(addData(newType)).unwrap()
       toast.success('Type berhasil ditambahkan!')
-      refreshData()
     } catch (error) {
       console.error('Gagal menambahkan Type:', error)
       toast.error('Gagal menambahkan Type!')
     }
   }
 
+  const handleDialogToggle = () => setEditDialogOpen(!editDialogOpen)
+
   const handleEditType = async updatedType => {
+    // e.preventDefault()
     try {
       await dispatch(editData(updatedType)).unwrap()
       toast.success('Type berhasil diedit!')
-      refreshData()
     } catch (error) {
       console.error('Gagal mengedit Type:', error)
       toast.error('Gagal mengedit Type!')
@@ -105,11 +126,23 @@ const TypeTable = () => {
     setEditDialogOpen(false)
   }
 
+  const onSubmit = e => {
+    e.preventDefault()
+
+    const updatedType = {
+      nama: editValue.nama,
+      id: editValue.id
+    }
+
+    // Logika update Type
+    handleEditType(updatedType)
+    setEditDialogOpen(false)
+  }
+
   const handleDelete = async id => {
     try {
       await dispatch(deleteData(id)).unwrap()
       toast.success('Type berhasil dihapus!')
-      refreshData()
     } catch (error) {
       console.error('Gagal menghapus Type:', error)
       toast.error('Gagal menghapus Type!')
@@ -119,18 +152,11 @@ const TypeTable = () => {
   const handleRestore = async id => {
     try {
       await dispatch(restoreGarbage(id)).unwrap()
-      toast.success('Type berhasil di-restore!')
-      refreshData()
+      toast.success('Negara berhasil di restore!')
     } catch (error) {
-      console.error('Gagal merestore Type:', error)
-      toast.error('Gagal merestore Type!')
+      console.error('Gagal merestore negara:', error)
+      toast.error('Gagal merestore negara!')
     }
-  }
-
-  const onSubmit = e => {
-    e.preventDefault()
-    const updatedType = { nama: editValue.nama, id: editValue.id }
-    handleEditType(updatedType)
   }
 
   const columns = [
@@ -158,11 +184,13 @@ const TypeTable = () => {
               </Tooltip>
             </>
           ) : (
-            <Tooltip arrow title='Aktifkan kembali'>
-              <IconButton onClick={() => handleRestore(row.id)}>
-                <Icon icon='tabler:restore' />
-              </IconButton>
-            </Tooltip>
+            <>
+              <Tooltip arrow title='Aktifkan kembali'>
+                <IconButton onClick={() => handleRestore(row.id)}>
+                  <Icon icon='tabler:restore' />
+                </IconButton>
+              </Tooltip>
+            </>
           )}
         </Box>
       )
@@ -224,8 +252,7 @@ const TypeTable = () => {
           </Card>
         </Grid>
       </Grid>
-
-      <Dialog maxWidth='sm' fullWidth onClose={() => setEditDialogOpen(false)} open={editDialogOpen}>
+      <Dialog maxWidth='sm' fullWidth onClose={handleDialogToggle} open={editDialogOpen}>
         <DialogTitle
           sx={{
             textAlign: 'center',
@@ -236,6 +263,7 @@ const TypeTable = () => {
           <Typography variant='h5' component='span' sx={{ mb: 2 }}>
             Edit Type
           </Typography>
+          {/* <Typography variant='body2'>Edit Type.</Typography> */}
         </DialogTitle>
         <DialogContent
           sx={{
@@ -248,7 +276,7 @@ const TypeTable = () => {
               <Grid item xs={12}>
                 <CustomTextField
                   fullWidth
-                  color='secondary'
+                  color={'secondary'}
                   value={editValue.nama}
                   label='Nama Type'
                   sx={{ mr: [0, 4], mb: [3, 5] }}
@@ -256,11 +284,23 @@ const TypeTable = () => {
                   onChange={e => setEditValue({ ...editValue, nama: e.target.value })}
                 />
               </Grid>
+              {/* <Grid item xs={12}>
+                <CustomTextField
+                  fullWidth
+                  color={'secondary'}
+                  value={editValue.alias}
+                  label='Nama Alias'
+                  sx={{ mr: [0, 4], mb: [3, 5] }}
+                  placeholder='Masukkan Nama Alias'
+                  onChange={e => setEditValue({ ...editValue, alias: e.target.value })}
+                />
+              </Grid> */}
 
               <Button type='submit' variant='contained' sx={{ mt: 4 }}>
                 Update
               </Button>
             </FormGroup>
+            {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
           </Box>
         </DialogContent>
       </Dialog>
