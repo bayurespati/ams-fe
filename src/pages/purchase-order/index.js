@@ -116,6 +116,10 @@ const PurchaseOrderTable = () => {
   const theme = useTheme()
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
+  const [newFilePo, setNewFilePo] = useState(null)
+  const [newFileBoq, setNewFileBoq] = useState(null)
+  const [isNewFilePoSelected, setIsNewFilePoSelected] = useState(false)
+  const [isNewFileBoqSelected, setIsNewFileBoqSelected] = useState(false)
 
   const [editValue, setEditValue] = useState({
     plan_id: '',
@@ -214,6 +218,12 @@ const PurchaseOrderTable = () => {
     const tanggalPO = new Date(row.tanggal_po_spk_pks)
     const tanggalDelivery = new Date(row.tanggal_delivery)
 
+    // ✅ RESET FILE BARU dan FLAG-nya
+    setNewFilePo(null)
+    setNewFileBoq(null)
+    setIsNewFilePoSelected(false)
+    setIsNewFileBoqSelected(false)
+
     setEditValue({
       id: row.id,
       plan_id: row.plan_id,
@@ -223,7 +233,9 @@ const PurchaseOrderTable = () => {
       nilai_pengadaan: row.nilai_pengadaan,
       tanggal_delivery: tanggalDelivery,
       akun: row.akun,
-      cost_center: row.cost_center
+      cost_center: row.cost_center,
+      file_po_spk_pks: row.file_po_spk_pks,
+      file_boq: row.file_boq
     })
     setEditDialogOpen(!editDialogOpen)
   }
@@ -242,19 +254,28 @@ const PurchaseOrderTable = () => {
     for (const key in editValue) {
       if (key === 'tanggal_po_spk_pks') {
         const formatted = formatDateToYYYYMMDD(editValue[key])
-
         if (formatted) {
           formData.append(key, formatted)
         }
       } else if (key === 'tanggal_delivery') {
         const formatted = formatDateToYYYYMMDD(editValue[key])
-
         if (formatted) {
           formData.append(key, formatted)
         }
-      } else {
+      } else if (key !== 'file_po_spk_pks' && key !== 'file_boq') {
+        // Hindari re-append file lama (biar dikirim file baru saja jika ada)
         formData.append(key, editValue[key])
       }
+    }
+
+    // ✅ Tambahkan file PO SPK PKS baru jika dipilih
+    if (newFilePo) {
+      formData.append('file_po_spk_pks', newFilePo)
+    }
+
+    // ✅ Tambahkan file BOQ baru jika kamu juga pakai file BOQ baru
+    if (newFileBoq) {
+      formData.append('file_boq', newFileBoq)
     }
 
     console.log('Edit Value:', editValue)
@@ -458,6 +479,114 @@ const PurchaseOrderTable = () => {
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                     onChange={e => setEditValue({ ...editValue, cost_center: e.target.value })}
                   />
+                </Grid>
+
+                <Grid container spacing={4} sx={{ mb: [3, 5] }}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2 }}>
+                      File PO SPK PKS Saat Ini:
+                    </Typography>
+                    {editValue.file_po_spk_pks ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          href={`https://iams-api.pins.co.id/storage/${editValue.file_po_spk_pks}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          Lihat File PO SPK PKS
+                        </Button>
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {editValue.file_po_spk_pks.split('/').pop()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        Tidak ada file PO SPK PKS.
+                      </Typography>
+                    )}
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                      Upload File PO SPK PKS Baru:
+                    </Typography>
+
+                    {/* Tombol Upload */}
+                    <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                      Pilih File
+                      <input
+                        type='file'
+                        accept='application/pdf,image/*'
+                        hidden
+                        onChange={e => {
+                          setNewFilePo(e.target.files[0])
+                          setIsNewFilePoSelected(true)
+                        }}
+                      />
+                    </Button>
+
+                    {/* Tampilkan nama file baru jika sudah dipilih */}
+                    {newFilePo && (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        {newFilePo.name}
+                      </Typography>
+                    )}
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={4} sx={{ mb: [3, 5] }}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2 }}>
+                      File BOQ Saat Ini:
+                    </Typography>
+                    {editValue.file_boq ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          href={`https://iams-api.pins.co.id/storage/${editValue.file_boq}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          Lihat File BOQ
+                        </Button>
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {editValue.file_boq.split('/').pop()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        Tidak ada file BOQ.
+                      </Typography>
+                    )}
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                      Upload File BOQ Baru:
+                    </Typography>
+
+                    {/* Tombol Upload */}
+                    <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                      Pilih File
+                      <input
+                        type='file'
+                        accept='application/pdf,image/*'
+                        hidden
+                        onChange={e => {
+                          setNewFileBoq(e.target.files[0])
+                          setIsNewFileBoqSelected(true)
+                        }}
+                      />
+                    </Button>
+
+                    {/* Tampilkan nama file baru jika sudah dipilih */}
+                    {newFileBoq && (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        {newFileBoq.name}
+                      </Typography>
+                    )}
+                  </Grid>
                 </Grid>
 
                 <DialogActions className='dialog-actions-dense'>

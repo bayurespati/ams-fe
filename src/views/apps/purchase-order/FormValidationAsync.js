@@ -79,23 +79,11 @@ const FormValidationAsync = () => {
   const [fileBoqError, setFileBoqError] = useState(false)
 
   const onSubmit = async data => {
-    // const formData = new FormData()
-    console.log('Data dikirim:', data)
     if (data.tanggal_po_spk_pks) {
       data.tanggal_po_spk_pks = format(new Date(data.tanggal_po_spk_pks), 'yyyy-MM-dd')
     }
     if (data.tanggal_delivery) {
       data.tanggal_delivery = format(new Date(data.tanggal_delivery), 'yyyy-MM-dd')
-    }
-
-    for (const key in data) {
-      if (filePoSpkPks && key === 'file_po_spk_pks') {
-        formData.append('file_po_spk_pks', filePoSpkPks)
-      } else if (fileBoq && key === 'file_boq') {
-        formData.append('file_boq', fileBoq)
-      } else {
-        formData.append(key, data[key])
-      }
     }
 
     if (!filePoSpkPks || filePoSpkPks.length === 0) {
@@ -110,12 +98,22 @@ const FormValidationAsync = () => {
     }
     setFileBoqError(false)
 
-    // formData.append('is_lop', 1)
+    // Siapkan FormData
+    const formData = new FormData()
+
+    for (const key in data) {
+      if (key !== 'file_po_spk_pks' && key !== 'file_boq') {
+        formData.append(key, data[key])
+      }
+    }
+
+    // Kirim file pertama (bukan array-nya)
+    formData.append('file_po_spk_pks', filePoSpkPks[0])
+    formData.append('file_boq', fileBoq[0])
 
     setLoading(true)
-    try {
-      // dispatch(addData(formData))
 
+    try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}po`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -126,7 +124,7 @@ const FormValidationAsync = () => {
       router.push('/purchase-order')
     } catch (error) {
       toast.error('Error')
-      console.log(error)
+      console.error(error)
     } finally {
       setLoading(false)
     }
