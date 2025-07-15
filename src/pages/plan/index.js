@@ -87,6 +87,8 @@ const PlanTable = () => {
 
   // ** State
   const [value, setValue] = useState('')
+  const [newFile, setNewFile] = useState(null)
+  const [isNewFileSelected, setIsNewFileSelected] = useState(false)
 
   const [editValue, setEditValue] = useState({
     judul: '',
@@ -110,6 +112,7 @@ const PlanTable = () => {
   const variety = useSelector(state => state.variety)
   const type = useSelector(state => state.type)
 
+  const [previewFile, setPreviewFile] = useState(null)
   useEffect(() => {
     dispatch(
       fetchData({
@@ -146,6 +149,9 @@ const PlanTable = () => {
     await dispatch(fetchVariety({ q: '' }))
     await dispatch(fetchType({ q: '' }))
 
+    setNewFile(null)
+    setIsNewFileSelected(false)
+
     setEditValue({
       judul: row.judul,
       nama_barang: row.nama_barang,
@@ -155,7 +161,8 @@ const PlanTable = () => {
       no_prpo: row.no_prpo,
       project_id: row.project_id,
       is_lop: 1,
-      id: row.id
+      id: row.id,
+      file_prpo: row.file_prpo
     })
 
     setEditDialogOpen(true)
@@ -164,16 +171,21 @@ const PlanTable = () => {
   const handleCloseDialog = () => {
     setEditDialogOpen(false)
   }
-
   const onSubmit = e => {
     e.preventDefault()
     const formData = new FormData()
     formData.append('_method', 'PATCH')
+
     for (const key in editValue) {
-      formData.append(key, editValue[key])
+      if (key !== 'file_prpo') {
+        formData.append(key, editValue[key])
+      }
     }
 
-    // Logika update plan
+    if (newFile) {
+      formData.append('file_prpo', newFile)
+    }
+
     handleEditPlan(formData)
     setEditDialogOpen(false)
   }
@@ -190,10 +202,6 @@ const PlanTable = () => {
       toast.error('Gagal menghapus Plan!')
     }
   }
-
-  console.log('ISI editValue:', editValue)
-  console.log('ISI type.data:', type.data)
-  console.log('Variety data: ', variety.data)
 
   const columns = [
     ...defaultColumns,
@@ -219,7 +227,7 @@ const PlanTable = () => {
 
   return (
     <>
-      <Grid container spacing={6}>
+      <Grid container spacing={4} sx={{ mt: 2 }}>
         <Grid item xs={12}>
           <Card>
             <CardHeader title='Daftar Plan' />
@@ -395,6 +403,60 @@ const PlanTable = () => {
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                     onChange={e => setEditValue({ ...editValue, no_prpo: e.target.value })}
                   />
+                </Grid>
+
+                <Grid container spacing={1} sx={{ mt: 2 }}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2 }}>
+                      File Prpo Saat Ini:
+                    </Typography>
+                    {editValue.file_prpo ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          href={`https://iams-api.pins.co.id/storage/${editValue.file_prpo}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          Lihat File Evidence
+                        </Button>
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {editValue.file_prpo.split('/').pop()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        Tidak ada file prpo.
+                      </Typography>
+                    )}
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                      Upload File Prpo Baru:
+                    </Typography>
+
+                    {/* Tombol Upload */}
+                    <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                      Pilih File
+                      <input
+                        type='file'
+                        accept='application/pdf,image/*'
+                        hidden
+                        onChange={e => {
+                          setNewFile(e.target.files[0])
+                          setIsNewFileSelected(true)
+                        }}
+                      />
+                    </Button>
+
+                    {/* Tampilkan nama file baru jika sudah dipilih */}
+                    {newFile && (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        {newFile.name}
+                      </Typography>
+                    )}
+                  </Grid>
                 </Grid>
 
                 <Button type='submit' variant='contained' sx={{ mt: 4 }}>

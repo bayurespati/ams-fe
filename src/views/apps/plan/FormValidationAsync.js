@@ -67,6 +67,11 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
       formData.append(key, data[key])
     }
 
+    // ✅ Ambil hanya file pertama dari array filePrpo
+    if (filePrpo && filePrpo.length > 0) {
+      formData.append('file_prpo', filePrpo[0])
+    }
+
     formData.append('is_lop', 1)
     if (filePrpo) {
       formData.append('file_prpo', filePrpo)
@@ -143,12 +148,6 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
                 control={control}
                 rules={{ required: true }}
                 render={({ field: { value, onChange } }) => {
-                  console.log('🟡 Current value (uuid):', value)
-                  console.log(
-                    '🟢 Matched data_jenis_barang:',
-                    data_jenis_barang.find(opt => opt.id === value)
-                  )
-
                   return (
                     <CustomAutocomplete
                       fullWidth
