@@ -107,6 +107,9 @@ const AsetMasukTable = () => {
   const [value, setValue] = useState('')
   const [view, setView] = useState('1')
   const [detail, setDetail] = useState({})
+  const [newFile, setNewFile] = useState(null)
+  const [isNewFileSelected, setIsNewFileSelected] = useState(false)
+
   const theme = useTheme()
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
@@ -167,12 +170,17 @@ const AsetMasukTable = () => {
     try {
       await dispatch(fetchPo()).unwrap()
 
+      // ✅ RESET FILE BARU dan FLAG-nya
+      setNewFile(null)
+      setIsNewFileSelected(false)
+
       setEditValue({
         id: row.id,
         po_id: row.po_id,
         no_do: row.no_do,
         lokasi_gudang: row.lokasi_gudang,
         owner_id: row.owner_id,
+        file_evidence: row.file_evidence,
         keterangan: row.keterangan,
         no_gr: row.no_gr,
         tanggal_masuk: new Date(row.tanggal_masuk)
@@ -189,15 +197,19 @@ const AsetMasukTable = () => {
     e.preventDefault()
     const formData = new FormData()
     formData.append('_method', 'PATCH')
+
     for (const key in editValue) {
       if (key === 'tanggal_masuk') {
         formData.append('tanggal_masuk', format(editValue[key], 'yyyy-MM-dd'))
-      } else {
+      } else if (key !== 'file_evidence') {
         formData.append(key, editValue[key])
       }
     }
 
-    // Logika update po
+    if (newFile) {
+      formData.append('file_evidence', newFile)
+    }
+
     handleEditAsetMasuk(formData)
     setEditDialogOpen(false)
   }
@@ -419,13 +431,58 @@ const AsetMasukTable = () => {
                   aria-describedby='validation-async-no-gr'
                 />
               </Grid>
-              {/* <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={6}>
+              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={12}>
                 <Typography variant='body2' component='span' sx={{ mb: 2 }}>
-                  {' '}
-                  Upload File Evidence{' '}
+                  File Evidence Saat Ini:
                 </Typography>
-                <InputFileUploadBtn files={fileEvidence} setFiles={setFileEvidence} />
-              </Grid> */}
+                {editValue.file_evidence ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Button
+                      variant='outlined'
+                      color='primary'
+                      href={`https://iams-api.pins.co.id/storage/${editValue.file_evidence}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      Lihat File Evidence
+                    </Button>
+                    <Typography variant='body2' sx={{ mt: 1 }}>
+                      {editValue.file_evidence.split('/').pop()}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    Tidak ada file evidence.
+                  </Typography>
+                )}
+              </Grid>
+              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={12}>
+                <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                  Upload File Evidence Baru:
+                </Typography>
+
+                {/* Tombol Upload */}
+                <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                  Pilih File
+                  <input
+                    type='file'
+                    accept='application/pdf,image/*'
+                    hidden
+                    onChange={e => {
+                      setNewFile(e.target.files[0])
+                      setIsNewFileSelected(true)
+                    }}
+                  />
+                </Button>
+
+                {/* Tampilkan nama file baru jika sudah dipilih */}
+                {newFile && (
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    {newFile.name}
+                  </Typography>
+                )}
+              </Grid>
+
               <DialogActions className='dialog-actions-dense'>
                 <Button onClick={handleClose} color='secondary' sx={{ mt: 4 }} variant='contained'>
                   Batalkan

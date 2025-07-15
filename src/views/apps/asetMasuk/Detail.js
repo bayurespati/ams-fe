@@ -259,17 +259,24 @@ const Detail = ({ id, setView }) => {
                 {data?.file_evidence ? (
                   <Box sx={{ mt: 2 }}>
                     {!showPreview ? (
-                      <Button
-                        variant='outlined'
-                        color='primary'
-                        size='small'
-                        onClick={() => {
-                          const url = `https://iams-api.pins.co.id/storage/${data.file_evidence}`
-                          window.open(url, '_blank', 'noopener,noreferrer')
-                        }}
-                      >
-                        Lihat File Evidence
-                      </Button>
+                      <>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          size='small'
+                          onClick={() => {
+                            const url = `https://iams-api.pins.co.id/storage/${data.file_evidence}`
+                            window.open(url, '_blank', 'noopener,noreferrer')
+                          }}
+                        >
+                          Lihat File Evidence
+                        </Button>
+
+                        {/* Tampilkan nama file di bawah tombol */}
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {data.file_evidence.split('/').pop()}
+                        </Typography>
+                      </>
                     ) : (
                       <>
                         {/\.(pdf)$/i.test(data.file_evidence) ? (
