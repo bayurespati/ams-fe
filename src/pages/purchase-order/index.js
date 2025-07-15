@@ -102,7 +102,11 @@ const defaultColumns = [
     field: 'cost_center',
     headerClassName: 'super-app-theme--header',
     headerName: 'cost_center',
-    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.cost_center}</Typography>
+    renderCell: ({ row }) => {
+      console.log(row)
+
+      return <Typography sx={{ color: 'text.secondary' }}>{row.cost_center}</Typography>
+    }
   }
 ]
 
@@ -112,6 +116,10 @@ const PurchaseOrderTable = () => {
   const theme = useTheme()
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
+  const [newFilePo, setNewFilePo] = useState(null)
+  const [newFileBoq, setNewFileBoq] = useState(null)
+  const [isNewFilePoSelected, setIsNewFilePoSelected] = useState(false)
+  const [isNewFileBoqSelected, setIsNewFileBoqSelected] = useState(false)
 
   const [editValue, setEditValue] = useState({
     plan_id: '',
@@ -147,32 +155,87 @@ const PurchaseOrderTable = () => {
     setValue(val)
   }, [])
 
-  const handleEditPurchaseOrder = async data => {
+  const handleEditPurchaseOrder = async formData => {
     try {
-      await dispatch(editData(data)).unwrap()
+      await dispatch(editData(formData)).unwrap()
       toast.success('Purchase order berhasil diedit!')
+      dispatch(fetchData({ q: value }))
+      setEditDialogOpen(false)
     } catch (error) {
       console.error('Gagal mengedit purchase order:', error)
-      toast.error('Gagal mengedit purchase order!')
+
+      if (
+        error?.response?.data?.errors?.nama_pekerjaan &&
+        error.response.data.errors.nama_pekerjaan.includes('The nama pekerjaan has already been taken.')
+      ) {
+        toast.error('Nama pekerjaan sudah digunakan, silakan pilih nama lain.')
+      } else {
+        toast.error('Gagal mengedit purchase order!')
+      }
     }
-    setEditDialogOpen(false)
+  }
+
+  // Helper function untuk format tanggal
+  const formatDateToYYYYMMDD = dateValue => {
+    if (!dateValue) return ''
+
+    try {
+      let dateObj
+
+      // Jika sudah Date object
+      if (dateValue instanceof Date) {
+        dateObj = dateValue
+      }
+      // Jika string, convert ke Date
+      else if (typeof dateValue === 'string') {
+        dateObj = new Date(dateValue)
+      }
+      // Jika tidak valid, return empty string
+      else {
+        console.warn('Invalid date value:', dateValue)
+        return ''
+      }
+
+      // Validasi apakah Date object valid
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid date object:', dateObj)
+        return ''
+      }
+
+      // Format manual untuk memastikan format yyyy-MM-dd
+      const year = dateObj.getFullYear()
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+      const day = String(dateObj.getDate()).padStart(2, '0')
+
+      return `${year}-${month}-${day}`
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return ''
+    }
   }
 
   const handleDialogToggle = row => {
+    const tanggalPO = new Date(row.tanggal_po_spk_pks)
+    const tanggalDelivery = new Date(row.tanggal_delivery)
+
+    // ✅ RESET FILE BARU dan FLAG-nya
+    setNewFilePo(null)
+    setNewFileBoq(null)
+    setIsNewFilePoSelected(false)
+    setIsNewFileBoqSelected(false)
+
     setEditValue({
       id: row.id,
       plan_id: row.plan_id,
       nama_pekerjaan: row.nama_pekerjaan,
       no_po_spk_pks: row.no_po_spk_pks,
-      tanggal_po_spk_pks: new Date(row.tanggal_po_spk_pks),
-
-      // file_po_spk_pks: row.file_po_spk_pks,
+      tanggal_po_spk_pks: tanggalPO,
       nilai_pengadaan: row.nilai_pengadaan,
-      tanggal_delivery: new Date(row.tanggal_delivery),
+      tanggal_delivery: tanggalDelivery,
       akun: row.akun,
-      cost_center: row.cost_center
-
-      // file_boq: row.file_boq
+      cost_center: row.cost_center,
+      file_po_spk_pks: row.file_po_spk_pks,
+      file_boq: row.file_boq
     })
     setEditDialogOpen(!editDialogOpen)
   }
@@ -184,19 +247,39 @@ const PurchaseOrderTable = () => {
   const onSubmit = e => {
     e.preventDefault()
     const formData = new FormData()
+
     formData.append('_method', 'PATCH')
+    formData.append('uuid', editValue.id)
+
     for (const key in editValue) {
-      formData.append(key, editValue[key])
+      if (key === 'tanggal_po_spk_pks') {
+        const formatted = formatDateToYYYYMMDD(editValue[key])
+        if (formatted) {
+          formData.append(key, formatted)
+        }
+      } else if (key === 'tanggal_delivery') {
+        const formatted = formatDateToYYYYMMDD(editValue[key])
+        if (formatted) {
+          formData.append(key, formatted)
+        }
+      } else if (key !== 'file_po_spk_pks' && key !== 'file_boq') {
+        // Hindari re-append file lama (biar dikirim file baru saja jika ada)
+        formData.append(key, editValue[key])
+      }
     }
 
-    if (editValue.tanggal_po_spk_pks) {
-      formData.append('tanggal_po_spk_pks', format(editValue.tanggal_po_spk_pks, 'yyyy-MM-dd'))
-    }
-    if (editValue.tanggal_delivery) {
-      formData.append('tanggal_delivery', format(editValue.tanggal_delivery, 'yyyy-MM-dd'))
+    // ✅ Tambahkan file PO SPK PKS baru jika dipilih
+    if (newFilePo) {
+      formData.append('file_po_spk_pks', newFilePo)
     }
 
-    // Logika update po
+    // ✅ Tambahkan file BOQ baru jika kamu juga pakai file BOQ baru
+    if (newFileBoq) {
+      formData.append('file_boq', newFileBoq)
+    }
+
+    console.log('Edit Value:', editValue)
+
     handleEditPurchaseOrder(formData)
     setEditDialogOpen(false)
   }
@@ -215,6 +298,7 @@ const PurchaseOrderTable = () => {
     try {
       await dispatch(deleteData(id)).unwrap()
       toast.success('PurchaseOrder berhasil dihapus!')
+      dispatch(fetchData({ q: value }))
     } catch (error) {
       console.error('Gagal menghapus PurchaseOrder:', error)
       toast.error('Gagal menghapus PurchaseOrder!')
@@ -313,30 +397,9 @@ const PurchaseOrderTable = () => {
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                     getOptionLabel={option => option.judul || ''}
                     onChange={(e, value) => setEditValue({ ...editValue, plan_id: value.id })}
-                    renderInput={params => <CustomTextField placeholder='Printer' {...params} label='Tipe Aset' />}
+                    renderInput={params => <CustomTextField placeholder='Printer' {...params} label='Nama Plan: ' />}
                   />
                 </Grid>
-                {/* <Grid item xs={12}>
-                  <CustomAutocomplete
-                    fullWidth
-                    color={'secondary'}
-                    value={data_plan.find(option => option.id === editValue.plan_id) || null}
-                    options={data_plan}
-                    sx={{ mr: [0, 4], mb: [3, 5] }}
-                    getOptionLabel={option => option.nama || ''}
-                    onChange={(e, value) => setEditValue({ ...editValue, plan_id: value.id })}
-                    renderInput={params => (
-                      <CustomTextField
-                        placeholder='Printer'
-                        {...params}
-                        label='Plan'
-
-                        // error={Boolean(errors.plan_id)}
-                        // {...(errors.plan_id && { helperText: 'This field is required' })}
-                      />
-                    )}
-                  />
-                </Grid> */}
                 <Grid item xs={12}>
                   <CustomTextField
                     fullWidth
@@ -364,7 +427,11 @@ const PurchaseOrderTable = () => {
                     popperPlacement={popperPlacement}
                     label='Tanggal PO SPK PKS'
                     value={editValue.tanggal_po_spk_pks}
-                    onChange={e => setEditValue({ ...editValue, tanggal_po_spk_pks: e })}
+                    onChange={e => {
+                      console.log('Date picker onChange - PO:', e)
+                      console.log('Type:', typeof e)
+                      setEditValue({ ...editValue, tanggal_po_spk_pks: e })
+                    }}
                   />
                 </Grid>
 
@@ -373,7 +440,11 @@ const PurchaseOrderTable = () => {
                     popperPlacement={popperPlacement}
                     label='Tanggal Delivery'
                     value={editValue.tanggal_delivery}
-                    onChange={e => setEditValue({ ...editValue, tanggal_delivery: e })}
+                    onChange={e => {
+                      console.log('Date picker onChange - Delivery:', e)
+                      console.log('Type:', typeof e)
+                      setEditValue({ ...editValue, tanggal_delivery: e })
+                    }}
                   />
                 </Grid>
 
@@ -410,6 +481,114 @@ const PurchaseOrderTable = () => {
                   />
                 </Grid>
 
+                <Grid container spacing={4} sx={{ mb: [3, 5] }}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2 }}>
+                      File PO SPK PKS Saat Ini:
+                    </Typography>
+                    {editValue.file_po_spk_pks ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          href={`https://iams-api.pins.co.id/storage/${editValue.file_po_spk_pks}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          Lihat File PO SPK PKS
+                        </Button>
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {editValue.file_po_spk_pks.split('/').pop()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        Tidak ada file PO SPK PKS.
+                      </Typography>
+                    )}
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                      Upload File PO SPK PKS Baru:
+                    </Typography>
+
+                    {/* Tombol Upload */}
+                    <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                      Pilih File
+                      <input
+                        type='file'
+                        accept='application/pdf,image/*'
+                        hidden
+                        onChange={e => {
+                          setNewFilePo(e.target.files[0])
+                          setIsNewFilePoSelected(true)
+                        }}
+                      />
+                    </Button>
+
+                    {/* Tampilkan nama file baru jika sudah dipilih */}
+                    {newFilePo && (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        {newFilePo.name}
+                      </Typography>
+                    )}
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={4} sx={{ mb: [3, 5] }}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2 }}>
+                      File BOQ Saat Ini:
+                    </Typography>
+                    {editValue.file_boq ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          href={`https://iams-api.pins.co.id/storage/${editValue.file_boq}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          Lihat File BOQ
+                        </Button>
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {editValue.file_boq.split('/').pop()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        Tidak ada file BOQ.
+                      </Typography>
+                    )}
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                      Upload File BOQ Baru:
+                    </Typography>
+
+                    {/* Tombol Upload */}
+                    <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                      Pilih File
+                      <input
+                        type='file'
+                        accept='application/pdf,image/*'
+                        hidden
+                        onChange={e => {
+                          setNewFileBoq(e.target.files[0])
+                          setIsNewFileBoqSelected(true)
+                        }}
+                      />
+                    </Button>
+
+                    {/* Tampilkan nama file baru jika sudah dipilih */}
+                    {newFileBoq && (
+                      <Typography variant='body2' sx={{ mt: 1 }}>
+                        {newFileBoq.name}
+                      </Typography>
+                    )}
+                  </Grid>
+                </Grid>
+
                 <DialogActions className='dialog-actions-dense'>
                   <Button onClick={handleClose} color='secondary' sx={{ mt: 4 }} variant='contained'>
                     Batalkan
@@ -420,7 +599,6 @@ const PurchaseOrderTable = () => {
                   </Button>
                 </DialogActions>
               </FormGroup>
-              {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
             </Box>
           </DialogContent>
         </DatePickerWrapper>

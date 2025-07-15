@@ -3,7 +3,22 @@ import axios from 'axios'
 
 // Fungsi bantu untuk mengganti 'uuid' dengan 'id'
 const replaceUuidWithId = data => {
-  return data.map(item => ({ ...item, id: item.uuid }))
+  return data.map(item => {
+    const { uuid, ...rest } = item
+
+    return { id: uuid, ...rest }
+  })
+}
+
+const replaceSingleUuidWithId = data => {
+  if (!data) {
+    console.error('replaceSingleUuidWithId: received undefined data')
+
+    return {}
+  }
+  const { uuid, ...rest } = data
+
+  return { id: uuid, ...rest }
 }
 
 // Async Thunks
@@ -13,43 +28,41 @@ export const fetchData = createAsyncThunk('appVariety/fetchData', async params =
     axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}item_varieties/garbage`, { params })
   ])
 
-  return {
-    data: response.data.data,
-    garbage: response2.data.data,
-    params
-  }
+  const data = replaceUuidWithId(response.data.data)
+  const garbage = replaceUuidWithId(response2.data.data)
+
+  return { data: data, garbage: garbage, params }
 })
 
 export const addData = createAsyncThunk('appVariety/addData', async newVariety => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}item_varieties`, newVariety)
 
-  return response.data
+  const data = replaceSingleUuidWithId(response.data.data)
+  return data
 })
 
 export const editData = createAsyncThunk('appVariety/editData', async updatedVariety => {
   const response = await axios.patch(`${process.env.NEXT_PUBLIC_AMS_URL}item_varieties`, updatedVariety)
-
-  return response.data
+  const data = replaceSingleUuidWithId(response.data.data)
+  return data
 })
 
 export const deleteData = createAsyncThunk('appVariety/deleteData', async id => {
   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item_varieties`, {
     data: { id }
   })
-
+  
   return { message: response.data.message, id }
 })
 
 export const restoreGarbage = createAsyncThunk('appVariety/restoreGarbage', async id => {
   const response = await axios.patch(`${process.env.NEXT_PUBLIC_AMS_URL}item_varieties/restore`, { id })
-
   return { message: response.data.message, id }
 })
 
 // Filter berdasarkan nama
 const searchVariety = (data, query) => {
   const queryLowered = query.toLowerCase()
-
   return data.filter(variety => variety.nama.toLowerCase().includes(queryLowered))
 }
 
@@ -84,6 +97,7 @@ export const appVarietySlice = createSlice({
 
       state.data = searchVariety(dataWithId, action.payload.params.q || '')
       state.garbage = searchVariety(garbageWithId, action.payload.params.q || '')
+
     })
 
     builder.addCase(addData.fulfilled, (state, action) => {

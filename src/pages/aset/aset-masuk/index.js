@@ -39,6 +39,7 @@ import Detail from 'src/views/apps/asetMasuk/Detail'
 // ** Actions Imports
 import { fetchData, addData, editData, setSearchQuery, deleteData } from 'src/store/apps/aset-masuk'
 import { fetchData as fetchPo } from 'src/store/apps/purchase-order'
+import { store } from 'src/store'
 
 const colors = {
   support: 'info',
@@ -51,11 +52,6 @@ const colors = {
 const data_lokasi_gudang = [
   { lokasi: 'Jakarta Pusat', id: '1' },
   { lokasi: 'Jakarta Selatan', id: '2' }
-]
-
-const data_owner_type = [
-  { type: 'customer', id: '1' },
-  { type: 'PINS', id: '2' }
 ]
 
 const data_owner = [
@@ -111,6 +107,9 @@ const AsetMasukTable = () => {
   const [value, setValue] = useState('')
   const [view, setView] = useState('1')
   const [detail, setDetail] = useState({})
+  const [newFile, setNewFile] = useState(null)
+  const [isNewFileSelected, setIsNewFileSelected] = useState(false)
+
   const theme = useTheme()
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
@@ -120,7 +119,6 @@ const AsetMasukTable = () => {
     no_do: '',
     lokasi_gudang: '',
     owner_id: '',
-    owner_type: '',
     file_evidence: '',
     keterangan: '',
     no_gr: '',
@@ -142,6 +140,10 @@ const AsetMasukTable = () => {
     )
   }, [dispatch, value])
 
+  useEffect(() => {
+    console.log('Data hasil fetch untuk DataGrid:', store.data)
+  }, [store.data])
+
   const handleFilter = useCallback(val => {
     setValue(val)
   }, [])
@@ -150,6 +152,8 @@ const AsetMasukTable = () => {
     try {
       await dispatch(editData(data)).unwrap()
       toast.success('Do In berhasil diedit!')
+      // ✅ Refresh data setelah edit berhasil
+      dispatch(fetchData({ q: value }))
     } catch (error) {
       console.error('Gagal mengedit DO In:', error)
       toast.error('Gagal mengedit DO In!')
@@ -161,37 +165,51 @@ const AsetMasukTable = () => {
     setEditDialogOpen(false)
   }
 
-  const handleDialogToggle = row => {
-    setEditValue({
-      id: row.id,
-      po_id: row.po_id,
-      no_do: row.no_do,
-      lokasi_gudang: row.lokasi_gudang,
-      owner_id: row.owner_id,
-      owner_type: row.owner_type,
+  const handleDialogToggle = async row => {
+    console.log('Data: ', editValue)
+    try {
+      await dispatch(fetchPo()).unwrap()
 
-      // file_evidence: row.,
-      keterangan: row.keterangan,
-      no_gr: row.no_gr,
-      tanggal_masuk: new Date(row.tanggal_masuk)
-    })
-    dispatch(fetchPo())
-    setEditDialogOpen(!editDialogOpen)
+      // ✅ RESET FILE BARU dan FLAG-nya
+      setNewFile(null)
+      setIsNewFileSelected(false)
+
+      setEditValue({
+        id: row.id,
+        po_id: row.po_id,
+        no_do: row.no_do,
+        lokasi_gudang: row.lokasi_gudang,
+        owner_id: row.owner_id,
+        file_evidence: row.file_evidence,
+        keterangan: row.keterangan,
+        no_gr: row.no_gr,
+        tanggal_masuk: new Date(row.tanggal_masuk)
+      })
+
+      setEditDialogOpen(true)
+    } catch (error) {
+      toast.error('Gagal memuat data PO')
+      console.error('Fetch PO error:', error)
+    }
   }
 
   const onSubmit = e => {
     e.preventDefault()
     const formData = new FormData()
     formData.append('_method', 'PATCH')
+
     for (const key in editValue) {
       if (key === 'tanggal_masuk') {
         formData.append('tanggal_masuk', format(editValue[key], 'yyyy-MM-dd'))
-      } else {
+      } else if (key !== 'file_evidence') {
         formData.append(key, editValue[key])
       }
     }
 
-    // Logika update po
+    if (newFile) {
+      formData.append('file_evidence', newFile)
+    }
+
     handleEditAsetMasuk(formData)
     setEditDialogOpen(false)
   }
@@ -250,7 +268,6 @@ const AsetMasukTable = () => {
             <FormValidationAsync
               data_lokasi_gudang={data_lokasi_gudang}
               data_owner={data_owner}
-              data_owner_type={data_owner_type}
               setView={setView}
               setDetail={setDetail}
             />
@@ -274,6 +291,7 @@ const AsetMasukTable = () => {
                     pageSizeOptions={[10, 25, 50]}
                     paginationModel={paginationModel}
                     onPaginationModelChange={setPaginationModel}
+                    getRowId={row => row.id}
                   />
                 </Box>
               </CardContent>
@@ -392,18 +410,6 @@ const AsetMasukTable = () => {
               </Grid>
 
               <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
-                <CustomAutocomplete
-                  fullWidth
-                  color={'secondary'}
-                  options={data_owner_type}
-                  id='owner_type'
-                  onChange={(event, value) => setEditValue({ ...editValue, owner_type: value.id })}
-                  getOptionLabel={option => option.type || ''}
-                  value={data_owner_type.find(option => option.id === editValue.owner_type) || null} // Temukan objek berdasarkan title
-                  renderInput={params => <CustomTextField placeholder='PINS' {...params} label='Tipe Kepemilikan' />}
-                />
-              </Grid>
-              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
                 <CustomTextField
                   fullWidth
                   rows={4}
@@ -425,13 +431,58 @@ const AsetMasukTable = () => {
                   aria-describedby='validation-async-no-gr'
                 />
               </Grid>
-              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={6}>
+              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={12}>
                 <Typography variant='body2' component='span' sx={{ mb: 2 }}>
-                  {' '}
-                  Upload File Evidence{' '}
+                  File Evidence Saat Ini:
                 </Typography>
-                {/* <InputFileUploadBtn files={fileEvidence} setFiles={setFileEvidence} /> */}
+                {editValue.file_evidence ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Button
+                      variant='outlined'
+                      color='primary'
+                      href={`https://iams-api.pins.co.id/storage/${editValue.file_evidence}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      Lihat File Evidence
+                    </Button>
+                    <Typography variant='body2' sx={{ mt: 1 }}>
+                      {editValue.file_evidence.split('/').pop()}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    Tidak ada file evidence.
+                  </Typography>
+                )}
               </Grid>
+              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={12}>
+                <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                  Upload File Evidence Baru:
+                </Typography>
+
+                {/* Tombol Upload */}
+                <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                  Pilih File
+                  <input
+                    type='file'
+                    accept='application/pdf,image/*'
+                    hidden
+                    onChange={e => {
+                      setNewFile(e.target.files[0])
+                      setIsNewFileSelected(true)
+                    }}
+                  />
+                </Button>
+
+                {/* Tampilkan nama file baru jika sudah dipilih */}
+                {newFile && (
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    {newFile.name}
+                  </Typography>
+                )}
+              </Grid>
+
               <DialogActions className='dialog-actions-dense'>
                 <Button onClick={handleClose} color='secondary' sx={{ mt: 4 }} variant='contained'>
                   Batalkan

@@ -75,8 +75,10 @@ const FormValidationAsync = () => {
     formState: { errors }
   } = useForm({ defaultValues })
 
+  const [filePoSpkPksError, setFilePoSpkPksError] = useState(false)
+  const [fileBoqError, setFileBoqError] = useState(false)
+
   const onSubmit = async data => {
-    // const formData = new FormData()
     if (data.tanggal_po_spk_pks) {
       data.tanggal_po_spk_pks = format(new Date(data.tanggal_po_spk_pks), 'yyyy-MM-dd')
     }
@@ -84,22 +86,34 @@ const FormValidationAsync = () => {
       data.tanggal_delivery = format(new Date(data.tanggal_delivery), 'yyyy-MM-dd')
     }
 
+    if (!filePoSpkPks || filePoSpkPks.length === 0) {
+      setFilePoSpkPksError(true)
+      return
+    }
+    setFilePoSpkPksError(false)
+
+    if (!fileBoq || fileBoq.length === 0) {
+      setFileBoqError(true)
+      return
+    }
+    setFileBoqError(false)
+
+    // Siapkan FormData
+    const formData = new FormData()
+
     for (const key in data) {
-      if (filePoSpkPks && key === 'file_po_spk_pks') {
-        formData.append('file_po_spk_pks', filePoSpkPks)
-      } else if (fileBoq && key === 'file_boq') {
-        formData.append('file_boq', fileBoq)
-      } else {
+      if (key !== 'file_po_spk_pks' && key !== 'file_boq') {
         formData.append(key, data[key])
       }
     }
 
-    // formData.append('is_lop', 1)
+    // Kirim file pertama (bukan array-nya)
+    formData.append('file_po_spk_pks', filePoSpkPks[0])
+    formData.append('file_boq', fileBoq[0])
 
     setLoading(true)
-    try {
-      // dispatch(addData(formData))
 
+    try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}po`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -107,9 +121,10 @@ const FormValidationAsync = () => {
       })
 
       toast.success('Form Submitted')
+      router.push('/purchase-order')
     } catch (error) {
       toast.error('Error')
-      console.log(error)
+      console.error(error)
     } finally {
       setLoading(false)
     }
@@ -130,19 +145,19 @@ const FormValidationAsync = () => {
                   render={({ field: { value, onChange } }) => (
                     <CustomAutocomplete
                       fullWidth
-                      color={'secondary'}
+                      color='secondary'
                       options={data_plan}
                       id='plan_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya id
+                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')}
                       getOptionLabel={option => option.judul || ''}
-                      value={data_plan.find(option => option.id === value) || null} // Temukan objek berdasarkan id
+                      value={data_plan.find(option => option.id === value) || null}
                       renderInput={params => (
                         <CustomTextField
-                          placeholder='Plan A'
                           {...params}
+                          placeholder='Plan A'
                           label='Nama Plan'
                           error={Boolean(errors.plan_id)}
-                          {...(errors.plan_id && { helperText: 'This field is required' })}
+                          helperText={errors.plan_id && 'This field is required'}
                         />
                       )}
                     />
@@ -208,8 +223,7 @@ const FormValidationAsync = () => {
 
               <Grid item xs={12} sm={6}>
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
-                  {' '}
-                  Upload File PO SPK PKS{' '}
+                  Upload File PO SPK PKS
                 </Typography>
                 <InputFileUpload
                   label='PO SPK PKS'
@@ -217,6 +231,11 @@ const FormValidationAsync = () => {
                   files={filePoSpkPks}
                   setFiles={setFilePoSpkPks}
                 />
+                {filePoSpkPksError && (
+                  <Typography variant='caption' color='error'>
+                    File is required
+                  </Typography>
+                )}
               </Grid>
 
               <Grid item xs={12} sm={4}>
@@ -258,10 +277,14 @@ const FormValidationAsync = () => {
 
               <Grid item xs={12} sm={6}>
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
-                  {' '}
-                  Upload File BOQ{' '}
+                  Upload File BOQ
                 </Typography>
                 <InputFileUpload label='BOQ' id='file_boq' files={fileBoq} setFiles={setFileBoq} />
+                {fileBoqError && (
+                  <Typography variant='caption' color='error'>
+                    File is required
+                  </Typography>
+                )}
               </Grid>
 
               <Grid item xs={12}>
