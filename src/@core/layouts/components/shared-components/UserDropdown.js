@@ -36,17 +36,10 @@ const MenuItemStyled = styled(MenuItem)(({ theme }) => ({
 }))
 
 const UserDropdown = props => {
-  // ** Props
   const { settings } = props
-
-  // ** States
   const [anchorEl, setAnchorEl] = useState(null)
-
-  // ** Hooks
   const router = useRouter()
-  const { logout } = useAuth()
-
-  // ** Vars
+  const { user, logout } = useAuth()
   const { direction } = settings
 
   const handleDropdownOpen = event => {
@@ -54,10 +47,13 @@ const UserDropdown = props => {
   }
 
   const handleDropdownClose = url => {
-    if (url) {
-      router.push(url)
-    }
+    if (url) router.push(url)
     setAnchorEl(null)
+  }
+
+  const handleLogout = () => {
+    logout()
+    handleDropdownClose()
   }
 
   const styles = {
@@ -75,11 +71,6 @@ const UserDropdown = props => {
     }
   }
 
-  const handleLogout = () => {
-    logout()
-    handleDropdownClose()
-  }
-
   return (
     <Fragment>
       <Badge
@@ -87,18 +78,15 @@ const UserDropdown = props => {
         onClick={handleDropdownOpen}
         sx={{ ml: 2, cursor: 'pointer' }}
         badgeContent={<BadgeContentSpan />}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right'
-        }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Avatar
-          alt='John Doe'
-          src='/images/avatars/1.png'
-          onClick={handleDropdownOpen}
+          alt={user?.name || user?.username || 'User'}
+          src={user?.avatar || '/images/avatars/default.png'}
           sx={{ width: 38, height: 38 }}
         />
       </Badge>
+
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -112,58 +100,26 @@ const UserDropdown = props => {
             <Badge
               overlap='circular'
               badgeContent={<BadgeContentSpan />}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right'
-              }}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-              <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
+              <Avatar
+                alt={user?.name || user?.username || 'User'}
+                src={user?.avatar || '/images/avatars/default.png'}
+                sx={{ width: '2.5rem', height: '2.5rem' }}
+              />
             </Badge>
             <Box sx={{ display: 'flex', ml: 2.5, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 500 }}>John Doe</Typography>
-              <Typography variant='body2'>Admin</Typography>
+              <Typography sx={{ fontWeight: 500 }}>
+                {user?.name || user?.username || 'Guest'}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {user?.position || user?.role || 'User'}
+              </Typography>
             </Box>
           </Box>
-        </Box>
+        </Box>      
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:user-check' />
-            My Profile
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:settings' />
-            Settings
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:credit-card' />
-            Billing
-          </Box>
-        </MenuItemStyled>
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:lifebuoy' />
-            Help
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:info-circle' />
-            FAQ
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <Icon icon='tabler:currency-dollar' />
-            Pricing
-          </Box>
-        </MenuItemStyled>
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
+
         <MenuItemStyled sx={{ p: 0 }} onClick={handleLogout}>
           <Box sx={styles}>
             <Icon icon='tabler:logout' />

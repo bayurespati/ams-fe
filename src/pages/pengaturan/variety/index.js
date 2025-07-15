@@ -143,10 +143,10 @@ const VarietyTable = () => {
   const handleRestore = async id => {
     try {
       await dispatch(restoreGarbage(id)).unwrap()
-      toast.success('Negara berhasil di restore!')
+      toast.success('Variety berhasil di restore!')
     } catch (error) {
-      console.error('Gagal merestore negara:', error)
-      toast.error('Gagal merestore negara!')
+      console.error('Gagal merestore Variety:', error)
+      toast.error('Gagal merestore Variety!')
     }
   }
 

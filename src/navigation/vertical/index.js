@@ -23,7 +23,7 @@ const navigation = () => {
       icon: 'tabler:package',
       children: [
         {
-          title: 'Master Data',
+          title: 'List Aset',
           path: '/aset/master-data',
           auth: false
         },
@@ -51,7 +51,7 @@ const navigation = () => {
       auth: false
     },
     {
-      title: 'Pengaturan',
+      title: 'Master Data',
       icon: 'tabler:settings',
       children: [
         {
@@ -72,6 +72,16 @@ const navigation = () => {
         {
           title: 'Tipe',
           path: '/pengaturan/type',
+          auth: false
+        },
+        {
+          title: 'Brand',
+          path: '/pengaturan/brand',
+          auth: false,
+        },
+        {
+          title: 'Company',
+          path: '/pengaturan/company',
           auth: false
         }
       ],

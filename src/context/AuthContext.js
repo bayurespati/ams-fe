@@ -1,127 +1,120 @@
 // ** React Imports
 import { createContext, useEffect, useState } from 'react'
-
-// ** Next Import
 import { useRouter } from 'next/router'
-
-// ** Axios
 import axios from 'axios'
 
-// ** Config
-import authConfig from 'src/configs/auth'
-
-// ** Cookies
-import Cookies from 'js-cookie'
-import auth from 'src/configs/auth'
-
-// ** Defaults
+// ** Default Values
 const defaultProvider = {
   user: null,
   loading: true,
+  initialized: false,
   setUser: () => null,
   setLoading: () => Boolean,
   login: () => Promise.resolve(),
   logout: () => Promise.resolve()
 }
+
 const AuthContext = createContext(defaultProvider)
 
 const AuthProvider = ({ children }) => {
-  // ** States
-  const [user, setUser] = useState(defaultProvider.user)
-  const [loading, setLoading] = useState(defaultProvider.loading)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
-  // ** Hooks
   const router = useRouter()
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  // ✅ Cek dan inisialisasi sesi saat pertama load
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = Cookies.get(authConfig.storageTokenKeyName)
-      if (storedToken) {
-        setLoading(true)
-        await axios
-          .get(authConfig.meEndpoint, {
-            headers: {
-              Authorization: storedToken
-            }
-          })
-          .then(async response => {
-            setLoading(false)
-            await axios
-              .get(authConfig.detailUser, {
-                headers: {
-                  Authorization: storedToken,
-                  Token: storedToken
-                }
-              })
-              .then(response => {
-                setUser({ ...response.data.userData })
-              })
+      const token = localStorage.getItem('access_token')
+      const tokenType = localStorage.getItem('token_type')
+      const authHeader = token && tokenType ? `${tokenType} ${token}` : null
 
-            // setUser({ ...response.data.userData })
-          })
-          .catch(() => {
-            Cookies.remove(authConfig.storageTokenKeyName)
-            Cookies.remove('userData')
-            Cookies.remove('refreshToken')
-            setUser(null)
-            setLoading(false)
-            if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-              router.replace('/login')
-            }
-          })
+      if (authHeader) {
+        axios.defaults.headers.common['Authorization'] = authHeader
+        try {
+          const res = await axios.get(`${baseUrl}auth/token/detail`)
+          const userData = res.data.data || {}
+          userData.role = userData.role || 'admin'
+
+          setUser(userData)
+          localStorage.setItem('userData', JSON.stringify(userData))
+        } catch (err) {
+          console.error('❌ Gagal ambil detail user:', err)
+          localStorage.clear()
+          setUser(null)
+          if (!router.pathname.includes('/login')) router.replace('/login')
+        }
       } else {
-        setLoading(false)
+        const storedUser = localStorage.getItem('userData')
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser)
+          parsed.role = parsed.role || 'admin'
+          setUser(parsed)
+        }
       }
+
+      setLoading(false)
+      setInitialized(true)
     }
+
     initAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleLogin = (params, errorCallback) => {
-    axios
-      .post(`${process.env.NEXT_PUBLIC_BASE_URL}auth/token/request`, params)
-      .then(async response => {
-        // params.rememberMe ? window.localStorage.setItem(access_token, response.data.access_token) : null
-        window.localStorage.setItem('access_token', response.data.data.access_token)
-        window.localStorage.setItem('refresh_token', response.data.data.refresh_token)
-        const returnUrl = router.query.returnUrl
+  // ✅ Login
+  const handleLogin = async (params, errorCallback) => {
+    try {
+      const res = await axios.post(`${baseUrl}auth/token/request`, params)
+      const { access_token, refresh_token, token_type } = res.data.data
+      const authHeader = `${token_type} ${access_token}`
 
-        await axios
-          .get(`${process.env.NEXT_PUBLIC_BASE_URL}auth/token/detail`, {
-            headers: {
-              Authorization: response.data.data.token_type + ' ' + response.data.data.access_token
-            }
-          })
-          .then(response => {
-            setUser({ ...response.data.data, role: 'admin' })
-          })
+      // Simpan token
+      localStorage.setItem('access_token', access_token)
+      localStorage.setItem('refresh_token', refresh_token)
+      localStorage.setItem('token_type', token_type)
+      axios.defaults.headers.common['Authorization'] = authHeader
 
-        // setUser({ ...response.data.userData })
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-        router.replace(redirectURL)
-      })
-      .catch(err => {
-        if (errorCallback) errorCallback(err)
-      })
+      // Ambil data user
+      const detailRes = await axios.get(`${baseUrl}auth/token/detail`)
+      const userData = detailRes.data.data || {}
+      userData.role = userData.role || 'admin'
+
+      setUser(userData)
+      localStorage.setItem('userData', JSON.stringify(userData))
+
+      const returnUrl = router.query.returnUrl || '/'
+      router.replace(returnUrl)
+    } catch (err) {
+      console.error('❌ Login error:', err)
+      if (errorCallback) errorCallback(err)
+    }
   }
 
+  // ✅ Logout
   const handleLogout = () => {
+    localStorage.clear()
+    delete axios.defaults.headers.common['Authorization']
     setUser(null)
-    window.localStorage.removeItem('userData')
-    window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    router.push('/login')
+    setLoading(false)
+    router.replace('/login')
   }
 
-  const values = {
-    user,
-    loading,
-    setUser,
-    setLoading,
-    login: handleLogin,
-    logout: handleLogout
-  }
-
-  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        initialized,
+        setUser,
+        setLoading,
+        login: handleLogin,
+        logout: handleLogout
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export { AuthContext, AuthProvider }

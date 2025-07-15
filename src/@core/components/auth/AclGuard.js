@@ -1,16 +1,16 @@
 // ** React Imports
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
-// ** Next Import
+// ** Next Imports
 import { useRouter } from 'next/router'
 
-// ** Context Imports
+// ** Contexts
 import { AbilityContext } from 'src/layouts/components/acl/Can'
 
-// ** Config Import
+// ** Configs
 import { buildAbilityFor } from 'src/configs/acl'
 
-// ** Component Import
+// ** Components
 import NotAuthorized from 'src/pages/401'
 import Spinner from 'src/@core/components/spinner'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
@@ -18,55 +18,51 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
 
-// ** Util Import
+// ** Utils
 import getHomeRoute from 'src/layouts/components/acl/getHomeRoute'
 
-const AclGuard = props => {
-  // ** Props
-  const { aclAbilities, children, guestGuard = false, authGuard = true } = props
-
-  // ** Hooks
+const AclGuard = ({ aclAbilities, children, guestGuard = false, authGuard = true }) => {
   const auth = useAuth()
   const router = useRouter()
 
-  // ** Vars
-  let ability
+  // ✅ Buat ability berdasarkan role user dan subject yang ditentukan
+  const ability = useMemo(() => {
+    if (auth.user?.role) {
+      return buildAbilityFor(auth.user.role, aclAbilities.subject)
+    }
+
+    return null
+  }, [auth.user, aclAbilities.subject])
+
+  // 🚀 Redirect jika di halaman root '/' dan user sudah login
   useEffect(() => {
     if (auth.user && auth.user.role && !guestGuard && router.route === '/') {
       const homeRoute = getHomeRoute(auth.user.role)
-      router.replace(homeRoute)
+      if (homeRoute !== '/') {
+        console.log('🔁 Redirecting to:', homeRoute)
+        router.replace(homeRoute)
+      }
     }
   }, [auth.user, guestGuard, router])
 
-  // User is logged in, build ability for the user based on his role
-  if (auth.user && !ability) {
-    ability = buildAbilityFor(auth.user.role, aclAbilities.subject)
-    if (router.route === '/') {
-      return <Spinner />
-    }
-  }
-
-  // If guest guard or no guard is true or any error page
+  // 🔓 Untuk halaman publik atau error
   if (guestGuard || router.route === '/404' || router.route === '/500' || !authGuard) {
-    // If user is logged in and his ability is built
-    if (auth.user && ability) {
-      return <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
-    } else {
-      // If user is not logged in (render pages like login, register etc..)
-      return <>{children}</>
-    }
+    return auth.user && ability
+      ? <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
+      : <>{children}</>
   }
 
-  // Check the access of current user and render pages
-  if (ability && auth.user && ability.can(aclAbilities.action, aclAbilities.subject)) {
-    if (router.route === '/') {
-      return <Spinner />
-    }
+  // 🕒 Saat auth belum selesai atau ability belum siap
+  if (auth.loading || !auth.user || !ability) {
+    return <Spinner />
+  }
 
+  // ✅ Cek apakah user punya izin untuk mengakses halaman
+  if (ability.can(aclAbilities.action, aclAbilities.subject)) {
     return <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
   }
 
-  // Render Not Authorized component if the current user has limited access
+  // ❌ Jika tidak punya izin
   return (
     <BlankLayout>
       <NotAuthorized />

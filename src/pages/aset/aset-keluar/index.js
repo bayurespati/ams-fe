@@ -6,18 +6,14 @@ import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import { CardContent, CardHeader } from '@mui/material'
 import Grid from '@mui/material/Grid'
-import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
-import Checkbox from '@mui/material/Checkbox'
 import FormGroup from '@mui/material/FormGroup'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import AlertTitle from '@mui/material/AlertTitle'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import { DataGrid } from '@mui/x-data-grid'
-import FormControlLabel from '@mui/material/FormControlLabel'
 import { styled } from '@mui/material/styles'
 
 // ** Icon Imports
@@ -227,22 +223,14 @@ const AsetKeluarTable = () => {
             pb: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
           }}
         >
-          {/* <Alert severity='warning' sx={{ maxWidth: '500px' }}>
-            <AlertTitle>Warning!</AlertTitle>
-            By editing the permission name, you might break the system permissions functionality. Please ensure you're
-            absolutely certain before proceeding.
-          </Alert> */}
-
           <Box component='form' onSubmit={onSubmit}>
             <FormGroup sx={{ mb: 2, flexDirection: 'column', flexWrap: ['wrap', 'nowrap'] }}>
               <Grid item xs={12}>
                 <CustomTextField
                   fullWidth
                   color={'secondary'}
-                  // value={editValue}
                   label='No Kontrak'
                   sx={{ mr: [0, 4], mb: [3, 5] }}
-                  // placeholder=''
                   onChange={e => setEditValue(e.target.value)}
                 />
               </Grid>
@@ -250,10 +238,8 @@ const AsetKeluarTable = () => {
                 <CustomTextField
                   fullWidth
                   color={'secondary'}
-                  // value={editValue}
                   label='No DO'
                   sx={{ mr: [0, 4], mb: [3, 5] }}
-                  // placeholder='Masukkan Nama Alias'
                   onChange={e => setEditValue(e.target.value)}
                 />
               </Grid>
@@ -261,10 +247,8 @@ const AsetKeluarTable = () => {
                 <CustomTextField
                   fullWidth
                   color={'secondary'}
-                  // value={editValue}
                   label='Plan'
                   sx={{ mr: [0, 4], mb: [3, 5] }}
-                  // placeholder='Masukkan Nama Negara'
                   onChange={e => setEditValue(e.target.value)}
                 />
               </Grid>
@@ -272,10 +256,8 @@ const AsetKeluarTable = () => {
                 <CustomTextField
                   fullWidth
                   color={'secondary'}
-                  // value={editValue}
                   label='Lokasi Gudang'
                   sx={{ mr: [0, 4], mb: [3, 5] }}
-                  // placeholder='Masukkan Nama Alias'
                   onChange={e => setEditValue(e.target.value)}
                 />
               </Grid>
@@ -288,14 +270,7 @@ const AsetKeluarTable = () => {
                   htmlFor='account-settings-upload-image'
                 >
                   Upload File Evidence
-                  <input
-                    hidden
-                    type='file'
-                    // value={inputValue}
-                    accept='image/png, image/jpeg'
-                    // onChange={handleInputFileChange}
-                    id='account-settings-upload-image'
-                  />
+                  <input hidden type='file' accept='image/png, image/jpeg' id='account-settings-upload-image' />
                 </ButtonStyled>
               </Grid>
 
@@ -303,7 +278,6 @@ const AsetKeluarTable = () => {
                 Update
               </Button>
             </FormGroup>
-            {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
           </Box>
         </DialogContent>
       </Dialog>

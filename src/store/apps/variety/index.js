@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
 // Fungsi bantu untuk mengganti 'uuid' dengan 'id'
-
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
@@ -52,6 +51,7 @@ export const deleteData = createAsyncThunk('appVariety/deleteData', async id => 
   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item_varieties`, {
     data: { id }
   })
+  
   return { message: response.data.message, id }
 })
 
@@ -97,6 +97,7 @@ export const appVarietySlice = createSlice({
 
       state.data = searchVariety(dataWithId, action.payload.params.q || '')
       state.garbage = searchVariety(garbageWithId, action.payload.params.q || '')
+
     })
 
     builder.addCase(addData.fulfilled, (state, action) => {

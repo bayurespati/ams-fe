@@ -106,6 +106,7 @@ const KotaTable = () => {
     try {
       await dispatch(addData(newKota)).unwrap()
       toast.success('Kota berhasil ditambahkan!')
+      dispatch(fetchData({ q: value })) // Refresh data
     } catch (error) {
       console.error('Gagal menambahkan Kota:', error)
       toast.error('Gagal menambahkan Kota!')
@@ -135,10 +136,12 @@ const KotaTable = () => {
     e.preventDefault()
   }
 
+  //delete
   const handleDelete = async id => {
     try {
       await dispatch(deleteData(id)).unwrap()
       toast.success('Kota berhasil dihapus!')
+      dispatch(fetchData({ q: value })) // Refresh data
     } catch (error) {
       console.error('Gagal menghapus Kota:', error)
       toast.error('Gagal menghapus Kota!')

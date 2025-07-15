@@ -28,59 +28,69 @@ import Icon from 'src/@core/components/icon'
 import { useDispatch, useSelector } from 'react-redux'
 
 // ** Custom Components Imports
-import TableHeader from 'src/views/apps/negara/TableHeader'
+import TableHeader from 'src/views/apps/company/TableHeader'
 import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Actions Imports
-import { fetchData, addData, editData, setSearchQuery, deleteData, restoreGarbage } from 'src/store/apps/negara'
+import { fetchCompany, addCompany, editCompany, deleteCompany, restoreCompany, setSearchQuery } from 'src/store/apps/company'
 
 const defaultColumns = [
   {
     flex: 0.15,
-    field: 'nama',
+    field: 'name',
     headerClassName: 'super-app-theme--header',
     minWidth: 240,
     headerName: 'Nama',
-    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.nama}</Typography>
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.name}</Typography>
   },
   {
     flex: 0.15,
-    minWidth: 290,
-    field: 'alias',
+    minWidth: 240,
+    field: 'email',
     headerClassName: 'super-app-theme--header',
-    headerName: 'Alias',
-    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.alias}</Typography>
+    headerName: 'Email',
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.email}</Typography>
+  },
+  {
+    flex: 0.15,
+    minWidth: 180,
+    field: 'phone',
+    headerClassName: 'super-app-theme--header',
+    headerName: 'Telepon',
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.phone}</Typography>
+  },
+  {
+    flex: 0.15,
+    minWidth: 240,
+    field: 'address',
+    headerClassName: 'super-app-theme--header',
+    headerName: 'Alamat',
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.address}</Typography>
   }
 ]
 
-const NegaraTable = () => {
-  // ** State
+const CompanyTable = () => {
   const [value, setValue] = useState('')
-  const [editValue, setEditValue] = useState({ id: '', nama: '', alias: '' })
+  const [editValue, setEditValue] = useState({ id: '', name: '', email: '', phone: '', address: '' })
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
   const [tab, setTab] = useState('1')
 
-  // ** Hooks
   const dispatch = useDispatch()
-  const store = useSelector(state => state.negara)
+  const store = useSelector(state => state.company)
 
-  // Helper untuk refresh data dari backend
   const refreshData = () => {
-    dispatch(fetchData({ q: value }))
+    dispatch(fetchCompany({ q: value }))
   }
 
   useEffect(() => {
     refreshData()
   }, [dispatch, value])
 
-  const handleFilter = useCallback(
-    val => {
-      setValue(val)
-      dispatch(setSearchQuery({ query: val }))
-    },
-    [dispatch]
-  )
+  const handleFilter = useCallback(val => {
+    setValue(val)
+    dispatch(setSearchQuery({ query: val }))
+  }, [dispatch])
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue)
@@ -88,65 +98,60 @@ const NegaraTable = () => {
 
   const handleDialogToggle = () => setEditDialogOpen(!editDialogOpen)
 
-  const handleEditPermission = row => {
-    setEditValue({ id: row.id, nama: row.nama, alias: row.alias })
+  const handleEdit = row => {
+    setEditValue({ id: row.id, name: row.name, email: row.email, phone: row.phone, address: row.address })
     setEditDialogOpen(true)
   }
 
-  const handleAddNegara = async newNegara => {
+  const handleAdd = async newData => {
     try {
-      await dispatch(addData(newNegara)).unwrap()
-      toast.success('Negara berhasil ditambahkan!')
+      await dispatch(addCompany(newData)).unwrap()
+      toast.success('Company berhasil ditambahkan!')
       refreshData()
     } catch (error) {
-      console.error('Gagal menambahkan negara:', error)
-      toast.error('Gagal menambahkan negara!')
+      console.error(error)
+      toast.error('Gagal menambahkan company!')
     }
   }
 
-  const handleEditNegara = async updatedNegara => {
+  const handleEditSubmit = async updatedData => {
     try {
-      await dispatch(editData(updatedNegara)).unwrap()
-      toast.success('Negara berhasil diedit!')
+      await dispatch(editCompany(updatedData)).unwrap()
+      toast.success('Company berhasil diedit!')
       refreshData()
     } catch (error) {
-      console.error('Gagal mengedit negara:', error)
-      toast.error('Gagal mengedit negara!')
+      console.error(error)
+      toast.error('Gagal mengedit company!')
     }
     setEditDialogOpen(false)
   }
 
   const handleDelete = async id => {
     try {
-      await dispatch(deleteData(id)).unwrap()
-      toast.success('Negara berhasil dihapus!')
+      await dispatch(deleteCompany(id)).unwrap()
+      toast.success('Company berhasil dihapus!')
       refreshData()
     } catch (error) {
-      console.error('Gagal menghapus negara:', error)
-      toast.error('Gagal menghapus negara!')
+      console.error(error)
+      toast.error('Gagal menghapus company!')
     }
   }
 
   const handleRestore = async id => {
     try {
-      await dispatch(restoreGarbage(id)).unwrap()
-      toast.success('Negara berhasil di-restore!')
+      await dispatch(restoreCompany(id)).unwrap()
+      toast.success('Company berhasil di-restore!')
       refreshData()
     } catch (error) {
-      console.error('Gagal merestore negara:', error)
-      toast.error('Gagal merestore negara!')
+      console.error(error)
+      toast.error('Gagal merestore company!')
     }
   }
 
   const onSubmit = e => {
     e.preventDefault()
-
-    const updatedNegara = {
-      nama: editValue.nama,
-      alias: editValue.alias,
-      id: editValue.id
-    }
-    handleEditNegara(updatedNegara)
+    const updated = { ...editValue }
+    handleEditSubmit(updated)
   }
 
   const columns = [
@@ -163,7 +168,7 @@ const NegaraTable = () => {
           {tab === '1' ? (
             <>
               <Tooltip arrow title='Edit'>
-                <IconButton onClick={() => handleEditPermission(row)}>
+                <IconButton onClick={() => handleEdit(row)}>
                   <Icon icon='tabler:edit' />
                 </IconButton>
               </Tooltip>
@@ -190,21 +195,15 @@ const NegaraTable = () => {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader title='Daftar Negara' />
+            <CardHeader title='Daftar Company' />
             <TabContext value={tab}>
               <TabList onChange={handleTabChange} aria-label='simple tabs example'>
                 <Tab value='1' label='Aktif' />
                 <Tab value='2' label='Dihapus' />
               </TabList>
               <TabPanel value='1'>
-                <TableHeader value={value} handleFilter={handleFilter} handleAddNegara={handleAddNegara} />
-                <Box
-                  sx={{
-                    '& .super-app-theme--header': {
-                      backgroundColor: 'white'
-                    }
-                  }}
-                >
+                <TableHeader value={value} handleFilter={handleFilter} handleAddCompany={handleAdd} />
+                <Box sx={{ '& .super-app-theme--header': { backgroundColor: 'white' } }}>
                   <DataGrid
                     autoHeight
                     rows={store.data}
@@ -217,14 +216,8 @@ const NegaraTable = () => {
                 </Box>
               </TabPanel>
               <TabPanel value='2'>
-                <TableHeader value={value} handleFilter={handleFilter} handleAddNegara={handleAddNegara} />
-                <Box
-                  sx={{
-                    '& .super-app-theme--header': {
-                      backgroundColor: 'white'
-                    }
-                  }}
-                >
+                <TableHeader value={value} handleFilter={handleFilter} handleAddCompany={handleAdd} />
+                <Box sx={{ '& .super-app-theme--header': { backgroundColor: 'white' } }}>
                   <DataGrid
                     autoHeight
                     rows={store.garbage}
@@ -242,51 +235,15 @@ const NegaraTable = () => {
       </Grid>
 
       <Dialog maxWidth='sm' fullWidth onClose={handleDialogToggle} open={editDialogOpen}>
-        <DialogTitle
-          sx={{
-            textAlign: 'center',
-            px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`],
-            pt: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
-          }}
-        >
-          <Typography variant='h5' component='span' sx={{ mb: 2 }}>
-            Edit Negara
-          </Typography>
-        </DialogTitle>
-        <DialogContent
-          sx={{
-            px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`],
-            pb: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
-          }}
-        >
+        <DialogTitle>Edit Company</DialogTitle>
+        <DialogContent>
           <Box component='form' onSubmit={onSubmit}>
-            <FormGroup sx={{ mb: 2, flexDirection: 'column', flexWrap: ['wrap', 'nowrap'] }}>
-              <Grid item xs={12}>
-                <CustomTextField
-                  fullWidth
-                  color='secondary'
-                  value={editValue.nama}
-                  label='Nama Negara'
-                  placeholder='Masukkan Nama Negara'
-                  onChange={e => setEditValue({ ...editValue, nama: e.target.value })}
-                  sx={{ mb: [3, 5] }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <CustomTextField
-                  fullWidth
-                  color='secondary'
-                  value={editValue.alias}
-                  label='Nama Alias'
-                  placeholder='Masukkan Nama Alias'
-                  onChange={e => setEditValue({ ...editValue, alias: e.target.value })}
-                  sx={{ mb: [3, 5] }}
-                />
-              </Grid>
-
-              <Button type='submit' variant='contained' sx={{ mt: 4 }}>
-                Update
-              </Button>
+            <FormGroup>
+              <CustomTextField label='Nama' fullWidth sx={{ mb: 4 }} value={editValue.name} onChange={e => setEditValue({ ...editValue, name: e.target.value })} />
+              <CustomTextField label='Email' fullWidth sx={{ mb: 4 }} value={editValue.email} onChange={e => setEditValue({ ...editValue, email: e.target.value })} />
+              <CustomTextField label='Telepon' fullWidth sx={{ mb: 4 }} value={editValue.phone} onChange={e => setEditValue({ ...editValue, phone: e.target.value })} />
+              <CustomTextField label='Alamat' fullWidth sx={{ mb: 4 }} value={editValue.address} onChange={e => setEditValue({ ...editValue, address: e.target.value })} />
+              <Button type='submit' variant='contained'>Simpan</Button>
             </FormGroup>
           </Box>
         </DialogContent>
@@ -295,4 +252,4 @@ const NegaraTable = () => {
   )
 }
 
-export default NegaraTable
+export default CompanyTable
