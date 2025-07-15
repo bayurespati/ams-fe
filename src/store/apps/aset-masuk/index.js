@@ -1,12 +1,33 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
+// Fungsi bantu: mengganti uuid dengan id
+const replaceUuidWithId = data => {
+  return data.map(item => {
+    const { uuid, ...rest } = item
+    return { id: uuid, ...rest }
+  })
+}
+
+const replaceSingleUuidWithId = data => {
+  if (!data) {
+    console.error('replaceSingleUuidWithId: received undefined data')
+    return {}
+  }
+  const { uuid, ...rest } = data
+  return { id: uuid, ...rest }
+}
+
+// Async thunk
 export const fetchData = createAsyncThunk('appDoIn/fetchData', async params => {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}do-in`, {
     params
   })
 
-  return { data: response.data.data, params }
+  // Replace uuid with id
+  const modifiedData = replaceUuidWithId(response.data.data)
+
+  return { data: modifiedData, params }
 })
 
 export const addData = createAsyncThunk('appDoIn/addData', async newDoIn => {
@@ -16,13 +37,14 @@ export const addData = createAsyncThunk('appDoIn/addData', async newDoIn => {
     }
   })
 
-  return response.data
+  const replaced = replaceSingleUuidWithId(response.data.data)
+  return { ...response.data, data: replaced }
 })
 
 export const editData = createAsyncThunk('appDoIn/editData', async updatedDoIn => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}do-in`, updatedDoIn)
-
-  return response.data
+  const replaced = replaceSingleUuidWithId(response.data.data)
+  return { ...response.data, data: replaced }
 })
 
 export const deleteData = createAsyncThunk('appDoIn/deleteData', async id => {
@@ -31,6 +53,7 @@ export const deleteData = createAsyncThunk('appDoIn/deleteData', async id => {
   return { message: response.data.message, id }
 })
 
+// Fungsi search (case-insensitive)
 const searchDoIn = (data, query) => {
   const queryLowered = query.toLowerCase()
 
@@ -40,10 +63,11 @@ const searchDoIn = (data, query) => {
       doIn.lokasi_gudang.toLowerCase().includes(queryLowered) ||
       doIn.tanggal_masuk.toLowerCase().includes(queryLowered) ||
       doIn.no_gr.toLowerCase().includes(queryLowered) ||
-      doIn.po_id.toLowerCase().includes(queryLowered)
+      (doIn.po_id?.toString()?.toLowerCase() || '').includes(queryLowered)
   )
 }
 
+// Slice
 export const appDoInSlice = createSlice({
   name: 'appDoIn',
   initialState: {
@@ -55,7 +79,7 @@ export const appDoInSlice = createSlice({
   reducers: {
     setSearchQuery: (state, action) => {
       const { query } = action.payload
-      state.data = searchDoIn(state.data, query)
+      state.data = searchDoIn(state.allData, query)
     }
   },
   extraReducers: builder => {
@@ -65,30 +89,26 @@ export const appDoInSlice = createSlice({
       state.total = action.payload.data.length
       state.data = searchDoIn(state.allData, action.payload.params.q)
     })
-    builder
-      .addCase(addData.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.allData.push(action.payload.data)
-          state.data = searchDoIn(state?.allData, state?.params?.query || '')
-          state.total = state.allData.length
-        } else {
-          console.error('Add data payload is undefined')
-        }
-      })
-      .addCase(editData.fulfilled, (state, action) => {
-        const index = state.data.findIndex(item => item.id === action.payload.data.id)
-        if (index !== -1) {
-          state.data[index] = action.payload.data
-        }
-      })
-      .addCase(deleteData.fulfilled, (state, action) => {
-        state.allData = state.allData.filter(item => item.id !== action.payload.id)
-        state.data = searchDoIn(state.allData, state.params.query || '')
+    builder.addCase(addData.fulfilled, (state, action) => {
+      if (action.payload) {
+        state.allData.push(action.payload.data)
+        state.data = searchDoIn(state.allData, state.params?.query || '')
         state.total = state.allData.length
-      })
+      }
+    })
+    builder.addCase(editData.fulfilled, (state, action) => {
+      const index = state.data.findIndex(item => item.id === action.payload.data.id)
+      if (index !== -1) {
+        state.data[index] = action.payload.data
+      }
+    })
+    builder.addCase(deleteData.fulfilled, (state, action) => {
+      state.allData = state.allData.filter(item => item.id !== action.payload.id)
+      state.data = searchDoIn(state.allData, state.params?.query || '')
+      state.total = state.allData.length
+    })
   }
 })
 
 export const { setSearchQuery } = appDoInSlice.actions
-
 export default appDoInSlice.reducer

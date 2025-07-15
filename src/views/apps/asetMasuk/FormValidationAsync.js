@@ -34,14 +34,15 @@ const defaultValues = {
   no_do: '',
   lokasi_gudang: '',
   owner_id: '',
-  owner_type: '',
-  file_evidence: '',
+  // file_evidence: '',
   keterangan: '',
   no_gr: '',
   tanggal_masuk: ''
 }
 
-const FormValidationAsync = ({ data_lokasi_gudang, data_owner, data_owner_type, setView, setDetail }) => {
+import { fetchData } from 'src/store/apps/aset-masuk'
+
+const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetail }) => {
   // ** States
   const [loading, setLoading] = useState(false)
   const [fileEvidence, setFileEvidence] = useState([])
@@ -72,34 +73,97 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, data_owner_type, 
     formState: { errors }
   } = useForm({ defaultValues })
 
+  // const onSubmit = async data => {
+  //   console.log('Form Data:', data)
+  //   if (data.tanggal_masuk) {
+  //     data.tanggal_masuk = format(new Date(data.tanggal_masuk), 'yyyy-MM-dd')
+  //   }
+
+  //   for (const key in data) {
+  //     if (fileEvidence && key === 'file_evidence') {
+  //       formData.append('file_evidence', fileEvidence)
+  //     } else {
+  //       formData.append(key, data[key])
+  //     }
+  //   }
+
+  //   setLoading(true)
+  //   try {
+  //     const response = await dispatch(addData(formData)).unwrap()
+  //     toast.success('Form Submitted')
+
+  //     {
+  //       response
+  //         ? setTimeout(() => {
+  //             setDetail(response.data)
+  //             setView('3')
+  //           }, 2000)
+  //         : console.log('Data tidak tersedia')
+  //     }
+  //   } catch (error) {
+  //     toast.error('Error')
+  //     console.log(error)
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
   const onSubmit = async data => {
-    if (data.tanggal_masuk) {
-      data.tanggal_masuk = format(new Date(data.tanggal_masuk), 'yyyy-MM-dd')
-    }
-
-    for (const key in data) {
-      if (fileEvidence && key === 'file_evidence') {
-        formData.append('file_evidence', fileEvidence)
-      } else {
-        formData.append(key, data[key])
-      }
-    }
-
     setLoading(true)
+
     try {
-      const response = await dispatch(addData(formData)).unwrap()
-      toast.success('Form Submitted')
-      {
-        response
-          ? setTimeout(() => {
-              setDetail(response.data)
-              setView('3')
-            }, 2000)
-          : console.log('Data tidak tersedia')
+      // Format tanggal masuk
+      if (data.tanggal_masuk) {
+        data.tanggal_masuk = format(new Date(data.tanggal_masuk), 'yyyy-MM-dd')
       }
+
+      // 🔍 Log semua data yang akan dikirim dari form
+      console.log('=== Data Form yang Disubmit ===')
+      console.log(data)
+
+      // 🔍 Log isi fileEvidence sebelum dimasukkan ke FormData
+      if (fileEvidence.length > 0) {
+        console.log('=== File yang akan dikirim ===')
+        console.log('Nama File:', fileEvidence[0].name)
+        console.log('Ukuran File:', fileEvidence[0].size, 'bytes')
+        console.log('Tipe File:', fileEvidence[0].type)
+      } else {
+        console.log('Tidak ada file evidence yang dipilih.')
+      }
+
+      // Bangun FormData
+      const formData = new FormData()
+
+      // Tambahkan semua field form ke FormData (kecuali file_evidence)
+      for (const key in data) {
+        if (key !== 'file_evidence') {
+          formData.append(key, data[key])
+        }
+      }
+
+      // Tambahkan file evidence ke FormData jika ada
+      if (fileEvidence.length > 0) {
+        formData.append('file_evidence', fileEvidence[0])
+      }
+
+      // 🔍 Debug log FormData
+      console.log('=== FormData yang dikirim ke Backend ===')
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}:`, pair[1])
+      }
+
+      // Kirim ke backend
+      const response = await dispatch(addData(formData)).unwrap()
+      toast.success('Form berhasil ditambahkan!')
+
+      // Refresh data tabel
+      dispatch(fetchData({ q: '' }))
+
+      // Redirect ke halaman daftar DO In
+      setView('1')
     } catch (error) {
-      toast.error('Error')
-      console.log(error)
+      toast.error('Gagal menambahkan data!')
+      console.error(error)
     } finally {
       setLoading(false)
     }
@@ -131,9 +195,9 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, data_owner_type, 
                       color={'secondary'}
                       options={data_po}
                       id='po_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.uuid : '')} // Simpan hanya id
+                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya id
                       getOptionLabel={option => option.nama_pekerjaan || ''}
-                      value={data_po.find(option => option.uuid === value) || null} // Temukan objek berdasarkan title
+                      value={data_po.find(option => option.id === value) || null} // Temukan objek berdasarkan title
                       renderInput={params => (
                         <CustomTextField
                           placeholder='po laptop'
@@ -235,34 +299,6 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, data_owner_type, 
                           label='Pemilik'
                           error={Boolean(errors.owner_id)}
                           {...(errors.owner_id && { helperText: 'This field is required' })}
-                        />
-                      )}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Controller
-                  name='owner_type'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange } }) => (
-                    <CustomAutocomplete
-                      fullWidth
-                      color={'secondary'}
-                      options={data_owner_type}
-                      id='owner_type'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.uuid : '')} // Simpan hanya title
-                      getOptionLabel={option => option.type || ''}
-                      value={data_owner_type.find(option => option.uuid === value) || null} // Temukan objek berdasarkan title
-                      renderInput={params => (
-                        <CustomTextField
-                          placeholder='PINS'
-                          {...params}
-                          label='Tipe Kepemilikan'
-                          error={Boolean(errors.owner_type)}
-                          {...(errors.owner_type && { helperText: 'This field is required' })}
                         />
                       )}
                     />

@@ -72,11 +72,17 @@ const Detail = ({ id, setView }) => {
     }
   }, [filteredItems, data.po])
 
+  console.log('ID yang dikirim ke Detail:', id)
+
   const handleItemChange = (index, field, value) => {
     const newItems = [...items]
     newItems[index][field] = value
     setItems(newItems)
   }
+
+  console.log('Data Detail: ', data)
+
+  const [showPreview, setShowPreview] = useState(false)
 
   const handleDialogToggle = item => {
     setEditedData(item)
@@ -243,23 +249,63 @@ const Detail = ({ id, setView }) => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <Typography variant='body1'>Owner ID</Typography>
-                <Typography variant='body1'>{data?.owner_id}</Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant='body1'>Owner Type</Typography>
-                <Typography variant='body1'>{data?.owner_type}</Typography>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
                 <Typography variant='body1'>Keterangan</Typography>
                 <Typography variant='body1'>{data?.keterangan}</Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <Typography variant='body1'>File Evidence</Typography>
-                <Typography variant='body1'>{data?.file_evidence}</Typography>
+
+                {data?.file_evidence ? (
+                  <Box sx={{ mt: 2 }}>
+                    {!showPreview ? (
+                      <Button
+                        variant='outlined'
+                        color='primary'
+                        size='small'
+                        onClick={() => {
+                          const url = `https://iams-api.pins.co.id/storage/${data.file_evidence}`
+                          window.open(url, '_blank', 'noopener,noreferrer')
+                        }}
+                      >
+                        Lihat File Evidence
+                      </Button>
+                    ) : (
+                      <>
+                        {/\.(pdf)$/i.test(data.file_evidence) ? (
+                          <iframe
+                            src={`https://iams-api.pins.co.id/storage/${data.file_evidence}`}
+                            width='100%'
+                            height='500px'
+                            style={{ border: '1px solid #ccc', borderRadius: '8px' }}
+                            title='File Preview'
+                          />
+                        ) : /\.(jpg|jpeg|png|gif)$/i.test(data.file_evidence) ? (
+                          <img
+                            src={`https://iams-api.pins.co.id/storage/${data.file_evidence}`}
+                            alt='File Evidence'
+                            style={{ maxWidth: '100%', borderRadius: '8px' }}
+                          />
+                        ) : (
+                          <Button
+                            variant='outlined'
+                            color='primary'
+                            size='small'
+                            href={`https://iams-api.pins.co.id/storage/${data.file_evidence}`}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                          >
+                            Download File
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                ) : (
+                  <Typography variant='body2' color='text.secondary'>
+                    Tidak ada file evidence
+                  </Typography>
+                )}
               </Grid>
             </Grid>
           </Box>
