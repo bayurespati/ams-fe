@@ -59,6 +59,7 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
   const onSubmit = async data => {
     if (!filePrpo || filePrpo.length === 0) {
       setFileError(true)
+
       return
     }
     setFileError(false)

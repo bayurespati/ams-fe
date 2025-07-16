@@ -152,7 +152,6 @@ const AsetMasukTable = () => {
     try {
       await dispatch(editData(data)).unwrap()
       toast.success('Do In berhasil diedit!')
-      // ✅ Refresh data setelah edit berhasil
       dispatch(fetchData({ q: value }))
     } catch (error) {
       console.error('Gagal mengedit DO In:', error)
@@ -493,7 +492,6 @@ const AsetMasukTable = () => {
                 </Button>
               </DialogActions>
             </FormGroup>
-            {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
           </Box>
         </DialogContent>
       </Dialog>

@@ -186,19 +186,23 @@ const PurchaseOrderTable = () => {
       if (dateValue instanceof Date) {
         dateObj = dateValue
       }
+
       // Jika string, convert ke Date
       else if (typeof dateValue === 'string') {
         dateObj = new Date(dateValue)
       }
+
       // Jika tidak valid, return empty string
       else {
         console.warn('Invalid date value:', dateValue)
+
         return ''
       }
 
       // Validasi apakah Date object valid
       if (isNaN(dateObj.getTime())) {
         console.warn('Invalid date object:', dateObj)
+
         return ''
       }
 
@@ -210,6 +214,7 @@ const PurchaseOrderTable = () => {
       return `${year}-${month}-${day}`
     } catch (error) {
       console.error('Error formatting date:', error)
+
       return ''
     }
   }

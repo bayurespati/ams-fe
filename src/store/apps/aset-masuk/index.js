@@ -5,6 +5,7 @@ import axios from 'axios'
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
+
     return { id: uuid, ...rest }
   })
 }
@@ -12,9 +13,11 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) {
     console.error('replaceSingleUuidWithId: received undefined data')
+
     return {}
   }
   const { uuid, ...rest } = data
+
   return { id: uuid, ...rest }
 }
 
@@ -38,12 +41,14 @@ export const addData = createAsyncThunk('appDoIn/addData', async newDoIn => {
   })
 
   const replaced = replaceSingleUuidWithId(response.data.data)
+
   return { ...response.data, data: replaced }
 })
 
 export const editData = createAsyncThunk('appDoIn/editData', async updatedDoIn => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}do-in`, updatedDoIn)
   const replaced = replaceSingleUuidWithId(response.data.data)
+
   return { ...response.data, data: replaced }
 })
 
@@ -111,4 +116,5 @@ export const appDoInSlice = createSlice({
 })
 
 export const { setSearchQuery } = appDoInSlice.actions
+
 export default appDoInSlice.reducer

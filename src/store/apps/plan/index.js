@@ -11,11 +11,13 @@ export const fetchData = createAsyncThunk('appPlan/fetchData', async params => {
 
 export const addData = createAsyncThunk('appPlan/addData', async newPlan => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, newPlan)
+
   return response.data
 })
 
 export const editData = createAsyncThunk('appPlan/editData', async updatedPlan => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, updatedPlan)
+
   return response.data
 })
 
@@ -31,6 +33,7 @@ export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
+
     return { id: uuid, ...rest }
   })
 }
@@ -38,9 +41,11 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) {
     console.error('replaceSingleUuidWithId: received undefined data')
+
     return {}
   }
   const { uuid, ...rest } = data
+
   return { id: uuid, ...rest }
 }
 

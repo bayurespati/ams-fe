@@ -4,6 +4,7 @@ import axios from 'axios'
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
+
     return { id: uuid, ...rest }
   })
 }
@@ -11,24 +12,29 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) {
     console.error('replaceSingleUuidWithId: received undefined data')
+
     return {}
   }
   const { uuid, ...rest } = data
+
   return { id: uuid, ...rest }
 }
 
 export const fetchData = createAsyncThunk('appPurchaseOrder/fetchData', async params => {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}po`, { params })
+
   return { data: response.data.data, params }
 })
 
 export const addData = createAsyncThunk('appPurchaseOrder/addData', async newPurchaseOrder => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}po`, newPurchaseOrder)
+
   return response.data.data
 })
 
 export const editData = createAsyncThunk('appPurchaseOrder/editData', async updatedPurchaseOrder => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}po`, updatedPurchaseOrder)
+
   return response.data.data
 })
 

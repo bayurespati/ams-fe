@@ -34,7 +34,6 @@ const defaultValues = {
   no_do: '',
   lokasi_gudang: '',
   owner_id: '',
-  // file_evidence: '',
   keterangan: '',
   no_gr: '',
   tanggal_masuk: ''

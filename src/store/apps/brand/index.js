@@ -4,12 +4,14 @@ import axios from 'axios'
 const replaceUuidWithId = data =>
   data.map(item => {
     const { uuid, ...rest } = item
+
     return { id: uuid, ...rest }
   })
 
 const replaceSingleUuidWithId = data => {
   if (!data) return {}
   const { uuid, ...rest } = data
+
   return { id: uuid, ...rest }
 }
 
@@ -18,6 +20,7 @@ export const fetchData = createAsyncThunk('appBrand/fetchData', async params => 
     axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}brands`, { params }),
     axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}brands/garbage`, { params })
   ])
+
   return {
     data: replaceUuidWithId(response.data.data),
     garbage: replaceUuidWithId(response2.data.data),
@@ -27,26 +30,31 @@ export const fetchData = createAsyncThunk('appBrand/fetchData', async params => 
 
 export const addData = createAsyncThunk('appBrand/addData', async newBrand => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}brands`, newBrand)
+
   return replaceSingleUuidWithId(response.data.data)
 })
 
 export const editData = createAsyncThunk('appBrand/editData', async updatedBrand => {
   const response = await axios.patch(`${process.env.NEXT_PUBLIC_AMS_URL}brands`, updatedBrand)
+
   return replaceSingleUuidWithId(response.data.data)
 })
 
 export const deleteData = createAsyncThunk('appBrand/deleteData', async id => {
   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}brands`, { data: { id } })
+
   return { message: response.data.message, id }
 })
 
 export const restoreGarbage = createAsyncThunk('appBrand/restoreGarbage', async id => {
   const response = await axios.patch(`${process.env.NEXT_PUBLIC_AMS_URL}brands/restore`, { id })
+
   return { message: response.data.message, id }
 })
 
 const searchBrand = (data, query) => {
   const queryLowered = query.toLowerCase()
+
   return data.filter(
     item =>
       (item.name?.toLowerCase() || '').includes(queryLowered) ||

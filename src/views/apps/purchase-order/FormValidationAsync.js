@@ -88,12 +88,14 @@ const FormValidationAsync = () => {
 
     if (!filePoSpkPks || filePoSpkPks.length === 0) {
       setFilePoSpkPksError(true)
+
       return
     }
     setFilePoSpkPksError(false)
 
     if (!fileBoq || fileBoq.length === 0) {
       setFileBoqError(true)
+
       return
     }
     setFileBoqError(false)
