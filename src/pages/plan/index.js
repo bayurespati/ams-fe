@@ -171,6 +171,7 @@ const PlanTable = () => {
   const handleCloseDialog = () => {
     setEditDialogOpen(false)
   }
+
   const onSubmit = e => {
     e.preventDefault()
     const formData = new FormData()
@@ -325,15 +326,6 @@ const PlanTable = () => {
                       sx={{ mr: [0, 4], mb: [3, 5] }}
                     />
                   )}
-
-                  {/* <CustomTextField
-                    fullWidth
-                    color={'secondary'}
-                    value={editValue.jenis_barang_id}
-                    label='Jenis Aset'
-                    sx={{ mr: [0, 4], mb: [3, 5] }}
-                    onChange={e => setEditValue({ ...editValue, jenis_barang_id: e.target.value })}
-                  /> */}
                 </Grid>
 
                 <Grid item xs={12}>
@@ -353,7 +345,6 @@ const PlanTable = () => {
                       <CustomTextField
                         {...params}
                         label='Tipe Aset'
-                        //placeholder='Pilih tipe aset'
                         placeholder={
                           type.data.find(option => option.id === editValue.tipe_barang_id)?.nama || 'Pilih Tipe Aset'
                         }
@@ -361,15 +352,6 @@ const PlanTable = () => {
                     )}
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                   />
-
-                  {/* <CustomTextField
-                    fullWidth
-                    color={'secondary'}
-                    value={editValue.tipe_barang_id}
-                    label='Tipe Aset'
-                    sx={{ mr: [0, 4], mb: [3, 5] }}
-                    onChange={e => setEditValue({ ...editValue, tipe_barang_id: e.target.value })}
-                  /> */}
                 </Grid>
 
                 <Grid item xs={12}>
@@ -463,7 +445,6 @@ const PlanTable = () => {
                   Update
                 </Button>
               </FormGroup>
-              {/* <FormControlLabel control={<Checkbox />} label='Set as core permission' /> */}
             </Box>
           </DialogContent>
         </DropzoneWrapper>
