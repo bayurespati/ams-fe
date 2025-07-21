@@ -5,7 +5,7 @@ import axios from 'axios'
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
-
+    
     return { id: uuid, ...rest }
   })
 }
@@ -13,7 +13,7 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) {
     console.error('replaceSingleUuidWithId: received undefined data')
-
+    
     return {}
   }
 
@@ -22,11 +22,14 @@ const replaceSingleUuidWithId = data => {
   return { id: uuid, ...rest }
 }
 
+// Define base URL from env
+const BASE_URL = process.env.NEXT_PUBLIC_AMS_URL
+
 // Async Thunks
 export const fetchCompany = createAsyncThunk('appCompany/fetchCompany', async params => {
   const [response, response2] = await Promise.all([
-    axios.get(`/api/companies`, { params }),
-    axios.get(`/api/companies/garbage`, { params })
+    axios.get(`${BASE_URL}companies`, { params }),
+    axios.get(`${BASE_URL}companies/garbage`, { params })
   ])
 
   const data = replaceUuidWithId(response.data.data)
@@ -36,29 +39,27 @@ export const fetchCompany = createAsyncThunk('appCompany/fetchCompany', async pa
 })
 
 export const addCompany = createAsyncThunk('appCompany/addCompany', async newCompany => {
-  const response = await axios.post(`/api/companies`, newCompany)
-
+  const response = await axios.post(`${BASE_URL}companies`, newCompany)
   const data = replaceSingleUuidWithId(response.data.data)
-
+  
   return data
 })
 
 export const editCompany = createAsyncThunk('appCompany/editCompany', async updatedCompany => {
-  const response = await axios.patch(`/api/companies`, updatedCompany)
-
+  const response = await axios.patch(`${BASE_URL}companies`, updatedCompany)
   const data = replaceSingleUuidWithId(response.data.data)
 
   return data
 })
 
 export const deleteCompany = createAsyncThunk('appCompany/deleteCompany', async id => {
-  const response = await axios.delete(`/api/companies`, { data: { id } })
+  const response = await axios.delete(`${BASE_URL}companies`, { data: { id } })
 
   return { message: response.data.message, id }
 })
 
 export const restoreCompany = createAsyncThunk('appCompany/restoreCompany', async id => {
-  const response = await axios.patch(`/api/companies/restore`, { id })
+  const response = await axios.patch(`${BASE_URL}companies/restore`, { id })
 
   return { message: response.data.message, id }
 })
