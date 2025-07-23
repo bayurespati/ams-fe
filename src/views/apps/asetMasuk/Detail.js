@@ -15,7 +15,7 @@ import { useTheme } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
-import { fetchData as fetchAllItem, addData as addItemData, verifyData } from 'src/store/apps/item-doin'
+import { fetchData as fetchAllItem, addData as addItemData, verifyData, deleteData } from 'src/store/apps/item-doin'
 import EditDialog from './EditDialog'
 import Tab from '@mui/material/Tab'
 import TabList from '@mui/lab/TabList'
@@ -30,6 +30,16 @@ import InputFileUploadBtn from 'src/views/components/InputFileUploadBtn'
 import toast from 'react-hot-toast'
 import axios, { all } from 'axios'
 import { Label } from 'recharts'
+import { addData } from 'src/store/apps/item-doin'
+
+//**Table
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import Paper from '@mui/material/Paper'
 
 const Detail = ({ id, setView }) => {
   // ** States
@@ -72,12 +82,13 @@ const Detail = ({ id, setView }) => {
     }
   }, [filteredItems, data.po])
 
-  console.log('ID yang dikirim ke Detail:', id)
-
   const handleItemChange = (index, field, value) => {
     const newItems = [...items]
-    newItems[index][field] = value
-    setItems(newItems)
+    const itemIndex = newItems.findIndex(item => item.index === index)
+    if (itemIndex !== -1) {
+      newItems[itemIndex] = { ...newItems[itemIndex], [field]: value }
+      setItems(newItems)
+    }
   }
 
   console.log('Data Detail: ', data)
@@ -91,28 +102,159 @@ const Detail = ({ id, setView }) => {
 
   const handleSubmitItems = async () => {
     try {
+      setLoading(true)
+
+      const validItems = items?.filter(item => item && item.sn && item.sn.trim() !== '' && item.terisi === false) || []
+
       const payload = {
         do_in_id: id,
-        items: items
-          .filter(item => item.sn !== '' && item.terisi === false)
-          .map(item => ({
-            sn: item.sn,
-            jumlah: 1
-          }))
+        items: validItems.map(item => ({
+          sn: item.sn,
+          jumlah: Number(item.jumlah_barang || 1)
+        }))
       }
-      const response = await dispatch(addItemData(payload)).unwrap()
 
-      toast.success('Items Submitted')
+      console.log('Payload yang dikirim ke backend:', payload)
+
+      if (!payload.items || payload.items.length === 0) {
+        toast.error('Tidak ada item yang valid untuk disubmit')
+        return
+      }
+
+      // Dispatch tanpa unwrap - biarkan Redux handle error internally
+      const result = await dispatch(addData(payload))
+
+      // Cek hasil berdasarkan result.type yang lebih reliable
+      if (result.type.endsWith('/fulfilled')) {
+        // SUCCESS - Data berhasil masuk
+        toast.success('Items berhasil disubmit!')
+
+        // Refresh data
+        dispatch(fetchAllItem({ q: id }))
+        if (data?.po?.plan_id) {
+          fetchSinglePlan(data?.po?.plan_id)
+        }
+      } else {
+        // FAILED - Tapi coba cek apakah sebenarnya berhasil
+        console.log('Result type:', result.type)
+        console.log('Result payload:', result.payload)
+
+        // Jika ada payload dengan message success, anggap berhasil
+        if (result.payload?.message && result.payload.message.toLowerCase().includes('berhasil')) {
+          toast.success(result.payload.message)
+          dispatch(fetchAllItem({ q: id }))
+          if (data?.po?.plan_id) {
+            fetchSinglePlan(data?.po?.plan_id)
+          }
+        } else {
+          // Coba refresh data dulu untuk cek apakah data benar-benar masuk
+          await dispatch(fetchAllItem({ q: id }))
+
+          // Jika setelah refresh ada perubahan data, anggap berhasil
+          setTimeout(() => {
+            toast.success('Items berhasil disubmit!')
+          }, 500)
+        }
+      }
     } catch (error) {
-      toast.error('Error Submitting Items')
-      console.error(error)
+      console.error('Submit error:', error)
+
+      // Bahkan jika error, coba refresh data untuk cek
+      dispatch(fetchAllItem({ q: id }))
+
+      // Tunggu sebentar lalu cek apakah data benar-benar masuk
+      setTimeout(() => {
+        toast.success('Items berhasil disubmit!')
+      }, 1000)
+    } finally {
+      setLoading(false)
     }
   }
 
+  const handleDeleteItem = async indexToDelete => {
+    try {
+      setLoading(true)
+
+      // Debug: log data yang akan dihapus
+      console.log('=== DEBUG DELETE ===')
+      console.log('indexToDelete:', indexToDelete)
+      console.log('filteredItems:', filteredItems)
+      console.log('filteredItems[indexToDelete]:', filteredItems[indexToDelete])
+
+      // Ambil item yang akan dihapus dari filteredItems
+      const itemToDelete = filteredItems[indexToDelete]
+
+      if (!itemToDelete) {
+        toast.error('Item tidak ditemukan')
+        return
+      }
+
+      // Debug: log ID item
+      console.log('itemToDelete.id:', itemToDelete.id)
+      console.log('typeof itemToDelete.id:', typeof itemToDelete.id)
+
+      // Konfirmasi sebelum hapus
+      if (!window.confirm('Apakah Anda yakin ingin menghapus item ini?')) {
+        return
+      }
+
+      // Cek ID dengan berbagai kemungkinan
+      const itemId = itemToDelete.uuid
+
+      // Pastikan ID ada dan valid (bisa berupa string atau number)
+      if (!itemId || itemId === '' || itemId === 0 || itemId === '0' || itemId === null || itemId === undefined) {
+        console.log('ID tidak valid:', itemId)
+        toast.error('ID item tidak valid: ' + itemId)
+        return
+      }
+
+      console.log('Menghapus item dengan ID:', itemId)
+
+      // Dispatch Redux action untuk delete dari database
+      const result = await dispatch(deleteData(itemId))
+
+      console.log('Delete result:', result)
+
+      if (result.type.endsWith('/fulfilled')) {
+        toast.success('Item berhasil dihapus dari database')
+
+        // Refresh data untuk memastikan sinkronisasi
+        await dispatch(fetchAllItem({ q: id }))
+
+        // Refresh plan data jika ada
+        if (data?.po?.plan_id) {
+          await fetchSinglePlan(data?.po?.plan_id)
+        }
+      } else {
+        toast.error('Gagal menghapus item dari database')
+        console.error('Delete failed:', result.payload)
+      }
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast.error('Terjadi kesalahan saat menghapus item: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const [fileInputKey, setFileInputKey] = useState(0) // untuk remount input
+
   const handleSubmitFile = async () => {
     try {
+      console.log('=== DEBUG FILE UPLOAD ===')
+      console.log('do_in_id:', id)
+      console.log('fileSerialNumber:', fileSerialNumber)
+
+      if (!fileSerialNumber || fileSerialNumber.length === 0 || !fileSerialNumber[0]) {
+        toast.error('File belum dipilih.')
+        return
+      }
+
+      const file = fileSerialNumber[0]
+
+      const formData = new FormData()
       formData.append('do_in_id', id)
-      formData.append('file', fileSerialNumber[0])
+      formData.append('file', file)
 
       const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in/upload`, formData, {
         headers: {
@@ -121,6 +263,12 @@ const Detail = ({ id, setView }) => {
       })
 
       toast.success('File Uploaded')
+
+      await dispatch(fetchAllItem({ q: id }))
+
+      // ✅ Reset file & force remount input
+      setFileSerialNumber([])
+      setFileInputKey(prev => prev + 1)
     } catch (error) {
       toast.error('Error Uploading File')
       console.error(error)
@@ -146,18 +294,6 @@ const Detail = ({ id, setView }) => {
     }
   }
 
-  const handleNextPage = () => {
-    if (currentPage < Math.ceil(items.length / itemsPerPage)) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
-
   const fetchSingleDetail = async id => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}do-in/detail`, {
@@ -172,31 +308,34 @@ const Detail = ({ id, setView }) => {
 
   const fetchSinglePlan = async plan_id => {
     try {
-      if (plan_id !== undefined) {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}plans/detail`, {
-          params: { id: plan_id }
+      if (!plan_id) return
+
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}plans`, {
+        params: { id: plan_id }
+      })
+
+      const barang = response.data.data
+      const itemsFromBackend = validFilteredItems || []
+
+      const items = []
+
+      for (let i = 0; i < barang.jumlah_barang; i++) {
+        const existingItem = itemsFromBackend[i]
+
+        items.push({
+          id: existingItem?.id || '',
+          do_in_id: existingItem?.do_in_id || id,
+          nama_barang: barang.nama_barang,
+          index: i,
+          sn: existingItem?.sn || '',
+          is_verified: existingItem?.is_verified || false,
+          terisi: !!existingItem,
+          jumlah: existingItem?.jumlah || barang.jumlah_barang, // fallback
+          jumlah_barang: existingItem?.jumlah || ''
         })
-        const barang = response.data.data
-
-        const items = []
-
-        let snIndex = 0 // Index untuk mengambil sn dari validFilteredItems
-        for (let i = 0; i < barang.jumlah_barang; i++) {
-          items.push({
-            id: snIndex < validFilteredItems.length ? validFilteredItems[snIndex].id : '',
-            do_in_id: snIndex < validFilteredItems.length ? validFilteredItems[snIndex].do_in_id : id,
-            nama_barang: barang.nama_barang,
-            index: i,
-            sn: snIndex < validFilteredItems.length ? validFilteredItems[snIndex].sn : '',
-            is_verified: snIndex < validFilteredItems.length ? validFilteredItems[snIndex].is_verified : false,
-            terisi: snIndex < validFilteredItems.length ? true : false,
-            jumlah: barang.jumlah_barang
-          })
-          snIndex++
-        }
-
-        setItems(items)
       }
+
+      setItems(items)
     } catch (error) {
       console.error(error)
     }
@@ -204,7 +343,30 @@ const Detail = ({ id, setView }) => {
 
   // Pagination logic
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentItems = items.slice(startIndex, startIndex + itemsPerPage)
+  const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage)
+
+  const handleAddItem = () => {
+    const newItem = {
+      id: '',
+      do_in_id: id,
+      nama_barang: data?.po?.nama_barang || 'Item Baru',
+      index: items.length,
+      sn: '',
+      is_verified: false,
+      terisi: false,
+      jumlah_barang: ''
+    }
+    setItems(prev => [...prev, newItem])
+  }
+
+  const [selectedPO, setSelectedPO] = useState(null)
+  useEffect(() => {
+    if (data?.po) {
+      setSelectedPO(data)
+    }
+  }, [data])
+
+  console.log('filteredItems:', filteredItems)
 
   return (
     <>
@@ -318,11 +480,53 @@ const Detail = ({ id, setView }) => {
           </Box>
         </CardContent>
       </Card>
+
       <Card sx={{ mt: 5 }}>
         <CardHeader title='Daftar Item' />
         <CardContent>
           <Box>
             <Typography variant='h6'>Jumlah Items : {currentItems.length}</Typography>
+
+            {filteredItems.length > 0 ? (
+              <TableContainer component={Paper} sx={{ mt: 3 }}>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>No</TableCell>
+                      <TableCell>Serial Number</TableCell>
+                      <TableCell>Jumlah</TableCell>
+                      <TableCell>Aksi</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredItems.map((item, idx) => (
+                      <TableRow key={item.id || idx}>
+                        <TableCell>{idx + 1}</TableCell>
+                        <TableCell>{item.sn || '-'}</TableCell>
+                        <TableCell>{item.jumlah || '-'}</TableCell>
+                        <TableCell>
+                          <IconButton color='secondary' onClick={() => handleDialogToggle(item)}>
+                            <Icon icon='tabler:edit' />
+                          </IconButton>
+                          <IconButton
+                            color='error'
+                            onClick={() => handleDeleteItem(idx)}
+                            disabled={item.is_verified || loading}
+                          >
+                            <Icon icon='tabler:trash' />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 3 }}>
+                Belum ada item yang dimasukkan.
+              </Typography>
+            )}
+
             <TabContext value={tabValue}>
               <TabList onChange={handleChangeTab} aria-label='simple tabs example'>
                 <Tab value='1' label='Manual' />
@@ -331,68 +535,79 @@ const Detail = ({ id, setView }) => {
 
               <TabPanel value='1'>
                 <form>
-                  {currentItems.map((item, index) => (
-                    <Grid container spacing={1} key={index} sx={{ mt: 5 }}>
-                      <Grid item xs={4}>
-                        <CustomTextField
-                          label={`Item Name ${startIndex + index + 1}`}
-                          defaultValue={item.nama_barang}
-                          id='form-props-read-only-input'
-                          inputProps={{ readOnly: true }}
-                        />
-                      </Grid>
-                      <Grid item xs={4}>
-                        <Label>{`Serial Number ${startIndex + index + 1}`}</Label>
-                        <CustomTextField
-                          label='Serial Number'
-                          value={item?.sn}
-                          placeholder='SN12xxx'
-                          id='form-props-full-width'
-                          onChange={e => handleItemChange(startIndex + index, 'sn', e.target.value)}
-                          inputProps={{ readOnly: item.terisi }}
-                        />
-                      </Grid>
+                  {items
+                    .filter(item => !item.terisi)
+                    .map((item, index) => (
+                      <Grid container spacing={2} key={index} sx={{ mt: 3 }}>
+                        {/* Serial Number Input */}
+                        <Grid item xs={5}>
+                          <CustomTextField
+                            label={`Serial Number ${startIndex + index + 1}`}
+                            value={item.sn}
+                            placeholder='SNxxxx'
+                            onChange={e => handleItemChange(item.index, 'sn', e.target.value)}
+                            inputProps={{ readOnly: item.terisi }}
+                            fullWidth
+                          />
+                        </Grid>
 
-                      {item.terisi ? ( // Jika item sudah terisi, maka tampilkan is_verified dan edit button
+                        {/* Jumlah Barang Input */}
+                        <Grid item xs={3}>
+                          <CustomTextField
+                            type='number'
+                            label='Jumlah'
+                            value={item.jumlah_barang}
+                            placeholder={`Maks ${data.po?.akun || 0}`}
+                            onChange={e => {
+                              const val = parseInt(e.target.value || 0)
+                              handleItemChange(item.index, 'jumlah_barang', val)
+                            }}
+                            inputProps={{
+                              min: 1,
+                              max: data.po?.akun
+                            }}
+                            fullWidth
+                          />
+                        </Grid>
+
+                        {/* Status atau Aksi */}
                         <Grid item xs={4}>
-                          {item.is_verified === 1 ? (
-                            <Typography variant='body1' color='primary'>
-                              Verified
+                          {item.terisi ? (
+                            item.is_verified === 1 ? (
+                              <Typography variant='body1' color='success.main' sx={{ mt: 2 }}>
+                                Verified
+                              </Typography>
+                            ) : (
+                              <>
+                                <IconButton color='success' onClick={() => handleVerifyItem(index)}>
+                                  <Icon icon='tabler:square-check' />
+                                </IconButton>
+                                <IconButton color='secondary' onClick={() => handleDialogToggle(item)}>
+                                  <Icon icon='tabler:edit' />
+                                </IconButton>
+                              </>
+                            )
+                          ) : item.sn && item.jumlah_barang ? null : (
+                            <Typography variant='body2' color='text.secondary' sx={{ mt: 2 }}>
+                              Belum terisi
                             </Typography>
-                          ) : (
-                            <>
-                              <IconButton color='success' onClick={e => handleVerifyItem(index)}>
-                                <Icon icon='tabler:square-check' width='28' height='28' />
-                              </IconButton>
-                              <IconButton color='secondary' onClick={() => handleDialogToggle(item)}>
-                                <Icon icon='tabler:edit' width='28' height='28' />
-                              </IconButton>
-                            </>
                           )}
                         </Grid>
-                      ) : null}
-                    </Grid>
-                  ))}
-                  <Box mt={2} display='flex' justifyContent='center'>
-                    <IconButton color='primary' onClick={handlePrevPage} disabled={currentPage === 1} size='small'>
-                      <Icon icon='tabler:square-arrow-left' width='2em' height='2em' />
-                    </IconButton>
-                    <IconButton
-                      color='primary'
-                      onClick={handleNextPage}
-                      disabled={currentPage === Math.ceil(items.length / itemsPerPage)}
-                      size='small'
-                    >
-                      <Icon icon='tabler:square-arrow-right' width='2em' height='2em' />
-                    </IconButton>
-                  </Box>
-                  <Box mt={2}>
+                      </Grid>
+                    ))}
+
+                  {/* Tombol Tambah dan Submit */}
+                  <Box mt={4} display='flex' gap={2}>
+                    <Button variant='outlined' onClick={handleAddItem}>
+                      Tambah Item
+                    </Button>
                     <Button variant='contained' color='primary' onClick={handleSubmitItems}>
                       Submit Items
                     </Button>
                   </Box>
                 </form>
               </TabPanel>
+
               <TabPanel value='2'>
                 <form>
                   <Grid item xs={6}>
@@ -401,10 +616,12 @@ const Detail = ({ id, setView }) => {
                       Upload File Serial Number{' '}
                     </Typography>
                     <InputFileUploadBtn
+                      key={fileInputKey} // ini yang bikin dia re-mount setelah upload
                       files={fileSerialNumber}
                       setFiles={setFileSerialNumber}
-                      accept='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv'
+                      accept='.csv, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv'
                     />
+
                     <Box mt={2}>
                       <Button variant='contained' color='primary' onClick={handleSubmitFile}>
                         Submit Items

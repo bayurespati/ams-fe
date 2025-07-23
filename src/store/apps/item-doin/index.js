@@ -1,12 +1,29 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
+// ========== UUID to ID Helpers ==========
+const replaceUuidWithId = data => {
+  return data.map(item => {
+    const { uuid, ...rest } = item
+    return { id: uuid, uuid, ...rest } // ✅ Simpan uuid juga
+  })
+}
+
+const replaceSingleUuidWithId = data => {
+  if (!data) return {}
+  const { uuid, ...rest } = data
+  return { id: uuid, uuid, ...rest } // ✅ Simpan uuid juga
+}
+
+// ========== Async Thunks ==========
 export const fetchData = createAsyncThunk('appItemDoIn/fetchData', async params => {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
     params
   })
 
-  return { data: response.data.data, params }
+  const replacedData = replaceUuidWithId(response.data.data)
+
+  return { data: replacedData, params }
 })
 
 export const addData = createAsyncThunk('appItemDoIn/addData', async newDoIn => {
@@ -16,17 +33,17 @@ export const addData = createAsyncThunk('appItemDoIn/addData', async newDoIn => 
     }
   })
 
-  return response.data
+  const replaced = replaceSingleUuidWithId(response.data.data)
+
+  return { ...response.data, data: replaced }
 })
 
 export const editData = createAsyncThunk('appItemDoIn/editData', async updatedItem => {
-  const response = await axios.patch(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
-    id: updatedItem.id,
-    jumlah: updatedItem.jumlah,
-    sn: updatedItem.sn
-  })
+  const response = await axios.patch(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, updatedItem)
 
-  return response.data
+  const replaced = replaceSingleUuidWithId(response.data.data)
+
+  return { ...response.data, data: replaced }
 })
 
 export const verifyData = createAsyncThunk('appItemDoIn/verifyData', async data => {
@@ -35,28 +52,34 @@ export const verifyData = createAsyncThunk('appItemDoIn/verifyData', async data 
     do_in_id: data.do_in_id
   })
 
-  return response.data
+  const replaced = replaceSingleUuidWithId(response.data.data)
+
+  return { ...response.data, data: replaced }
 })
 
-export const deleteData = createAsyncThunk('appItemDoIn/deleteData', async id => {
-  const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, { data: { id: id } })
+// export const deleteData = createAsyncThunk('appItemDoIn/deleteData', async id => {
+//   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
+//     data: { id }
+//   })
+
+//   return { message: response.data.message, id }
+// })
+
+export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
+  const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
+    data: { id: id }
+  })
 
   return { message: response.data.message, id }
 })
 
+// ========== Utility ==========
 const searchItemDoIn = (data, query) => {
   const queryLowered = query.toLowerCase()
-  const tes = data.filter(item => item.do_in_id.includes(queryLowered))
-
-  return tes
-
-  // return data.filter(
-  //   item => item.do_in_id.toLowerCase().includes(queryLowered) || item.id.toLowerCase().includes(queryLowered)
-  // )
-
-  // return data.filter(doIn => doIn.do_in_id.toLowerCase().includes(queryLowered))
+  return data.filter(item => item.do_in_id.includes(queryLowered))
 }
 
+// ========== Slice ==========
 export const appItemDoInSlice = createSlice({
   name: 'appItemDoIn',
   initialState: {
@@ -68,48 +91,45 @@ export const appItemDoInSlice = createSlice({
   reducers: {
     setSearchQuery: (state, action) => {
       const { query } = action.payload
-      state.data = searchItemDoIn(state.data, query)
+      state.data = searchItemDoIn(state.allData, query)
     }
   },
   extraReducers: builder => {
-    builder.addCase(fetchData.fulfilled, (state, action) => {
-      state.params = action.payload.params
-      state.allData = action.payload.data
-      state.total = action.payload.data.length
-
-      state.data = searchItemDoIn(state.allData, action?.payload?.params?.q)
-    })
     builder
-    builder
-      .addCase(addData.fulfilled, (state, action) => {
+      .addCase(fetchData.fulfilled, (state, action) => {
+        console.log('[FETCH] Payload:', action.payload)
         state.params = action.payload.params
         state.allData = action.payload.data
         state.total = action.payload.data.length
-        state.data = searchItemDoIn(state.allData, action.payload.params.query)
-
-        // if (action.payload && state && state.params) {
-        //   state.allData.push(action.payload.data)
-        //   state.data = searchItemDoIn(state.allData, state.params.query || '')
-        //   state.total = state.allData.length
-        // } else {
-        //   console.error('Add data payload is undefined')
-        // }
+        state.data = searchItemDoIn(state.allData, action?.payload?.params?.q || '')
+      })
+      .addCase(addData.fulfilled, (state, action) => {
+        console.log('[ADD] Payload:', action.payload)
+        state.allData.push(action.payload.data)
+        state.data = searchItemDoIn(state.allData, state.params?.q || '')
+        state.total = state.allData.length
       })
       .addCase(editData.fulfilled, (state, action) => {
+        console.log('[EDIT] Payload:', action.payload)
         const index = state.data.findIndex(item => item.id === action.payload.data.id)
         if (index !== -1) {
           state.data[index] = action.payload.data
+          const allIndex = state.allData.findIndex(item => item.id === action.payload.data.id)
+          if (allIndex !== -1) state.allData[allIndex] = action.payload.data
         }
       })
       .addCase(deleteData.fulfilled, (state, action) => {
+        console.log('[DELETE] ID:', action.payload.id)
         state.allData = state.allData.filter(item => item.id !== action.payload.id)
-        state.data = searchItemDoIn(state.allData, state.params.query || '')
+        state.data = searchItemDoIn(state.allData, state.params?.q || '')
         state.total = state.allData.length
       })
       .addCase(verifyData.fulfilled, (state, action) => {
         const index = state.data.findIndex(item => item.id === action.payload.data.id)
         if (index !== -1) {
           state.data[index] = action.payload.data
+          const allIndex = state.allData.findIndex(item => item.id === action.payload.data.id)
+          if (allIndex !== -1) state.allData[allIndex] = action.payload.data
         }
       })
   }
