@@ -57,14 +57,6 @@ export const verifyData = createAsyncThunk('appItemDoIn/verifyData', async data 
   return { ...response.data, data: replaced }
 })
 
-// export const deleteData = createAsyncThunk('appItemDoIn/deleteData', async id => {
-//   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
-//     data: { id }
-//   })
-
-//   return { message: response.data.message, id }
-// })
-
 export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
     data: { id: id }

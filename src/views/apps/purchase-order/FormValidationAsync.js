@@ -232,6 +232,7 @@ const FormValidationAsync = () => {
                   id='file_po_spk_pks'
                   files={filePoSpkPks}
                   setFiles={setFilePoSpkPks}
+                  accept='.pdf,.jpg,.jpeg,.png,.gif'
                 />
                 {filePoSpkPksError && (
                   <Typography variant='caption' color='error'>
@@ -281,7 +282,13 @@ const FormValidationAsync = () => {
                 <Typography variant='body2' component='span' sx={{ mt: 0 }}>
                   Upload File BOQ
                 </Typography>
-                <InputFileUpload label='BOQ' id='file_boq' files={fileBoq} setFiles={setFileBoq} />
+                <InputFileUpload
+                  label='BOQ'
+                  id='file_boq'
+                  files={fileBoq}
+                  setFiles={setFileBoq}
+                  accept='.pdf,.jpg,.jpeg,.png,.gif'
+                />
                 {fileBoqError && (
                   <Typography variant='caption' color='error'>
                     File is required
