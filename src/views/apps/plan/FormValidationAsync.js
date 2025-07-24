@@ -275,7 +275,7 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
               <Typography variant='body2' component='span' sx={{ mb: 2 }}>
                 Upload File PRPO
               </Typography>
-              <InputFileUploadBtn files={filePrpo} setFiles={setFilePrpo} />
+              <InputFileUploadBtn files={filePrpo} setFiles={setFilePrpo} accept='.pdf,.jpg,.jpeg,.png,.gif' />
               {fileError && (
                 <Typography variant='caption' color='error'>
                   File is required

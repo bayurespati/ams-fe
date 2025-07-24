@@ -20,12 +20,18 @@ const EditDialog = ({ setOpen, open, item, setItem }) => {
 
   const onSubmit = async e => {
     e.preventDefault()
+    console.log('=== EDIT ITEM VALUE ===')
+    console.log('UUID:', item.uuid)
+    console.log('Serial Number (sn):', item.sn)
+    console.log('Jumlah:', item.jumlah)
+
     try {
       const response = await dispatch(editData(item)).unwrap()
       setOpen(false)
       toast.success(response.message || 'Item Edited')
     } catch (err) {
       toast.error('Error Editing Item')
+      console.error(err)
     }
   }
 
@@ -64,20 +70,21 @@ const EditDialog = ({ setOpen, open, item, setItem }) => {
         >
           <CustomTextField
             fullWidth
-            sx={{ mr: [0, 4], mb: [3, 5] }}
-            color={'secondary'}
-            label='Nama Item '
-            value={item.nama_barang}
-            inputProps={{ readOnly: true }}
-          />
-          <CustomTextField
-            fullWidth
             color={'secondary'}
             value={item.sn}
             label='Serial Number'
             sx={{ mr: [0, 4], mb: [3, 5] }}
             placeholder='Masukkan Serial Number'
             onChange={e => setItem({ ...item, sn: e.target.value })}
+          />
+          <CustomTextField
+            fullWidth
+            sx={{ mr: [0, 4], mb: [3, 5] }}
+            color='secondary'
+            label='Jumlah'
+            placeholder=''
+            value={item.jumlah}
+            onChange={e => setItem({ ...item, jumlah: Number(e.target.value) })}
           />
 
           <Box className='demo-space-x' sx={{ '& > :last-child': { mr: '0 !important' } }}>

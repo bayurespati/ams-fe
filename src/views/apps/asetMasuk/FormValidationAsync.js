@@ -351,7 +351,12 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                   {' '}
                   Upload File Evidence{' '}
                 </Typography>
-                <InputFileUploadBtn files={fileEvidence} setFiles={setFileEvidence} />
+                <InputFileUploadBtn
+                  files={fileEvidence}
+                  setFiles={setFileEvidence}
+                  accept='.pdf,.jpg,.jpeg,.png,.gif' // ✅ batasi tipe file
+                  maxSizeMB={2} // (opsional) jika ingin tetap limit 2MB
+                />
               </Grid>
 
               <Grid item xs={12}>
