@@ -90,7 +90,6 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
       router.push('/plan') // 👉 Redirect ke halaman plans setelah sukses
     } catch (error) {
       toast.error('Error')
-      console.log(error)
     } finally {
       setLoading(false)
     }
@@ -189,7 +188,6 @@ const FormValidationAsync = ({ data_tipe_barang, data_jenis_barang }) => {
                     value={data_tipe_barang.find(option => option.id === value) || null}
                     getOptionLabel={option => option.nama || ''}
                     onChange={(event, newValue) => {
-                      console.log('Selected Tipe:', newValue)
                       onChange(newValue ? newValue.id : '') // kirim UUID ke form
                     }}
                     renderInput={params => (

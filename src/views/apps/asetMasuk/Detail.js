@@ -91,8 +91,6 @@ const Detail = ({ id, setView }) => {
     }
   }
 
-  console.log('Data Detail: ', data)
-
   const [showPreview, setShowPreview] = useState(false)
 
   const handleDialogToggle = item => {
@@ -114,8 +112,6 @@ const Detail = ({ id, setView }) => {
         }))
       }
 
-      console.log('Payload yang dikirim ke backend:', payload)
-
       if (!payload.items || payload.items.length === 0) {
         toast.error('Tidak ada item yang valid untuk disubmit')
         return
@@ -135,10 +131,6 @@ const Detail = ({ id, setView }) => {
           fetchSinglePlan(data?.po?.plan_id)
         }
       } else {
-        // FAILED - Tapi coba cek apakah sebenarnya berhasil
-        console.log('Result type:', result.type)
-        console.log('Result payload:', result.payload)
-
         // Jika ada payload dengan message success, anggap berhasil
         if (result.payload?.message && result.payload.message.toLowerCase().includes('berhasil')) {
           toast.success(result.payload.message)
@@ -175,12 +167,6 @@ const Detail = ({ id, setView }) => {
     try {
       setLoading(true)
 
-      // Debug: log data yang akan dihapus
-      console.log('=== DEBUG DELETE ===')
-      console.log('indexToDelete:', indexToDelete)
-      console.log('filteredItems:', filteredItems)
-      console.log('filteredItems[indexToDelete]:', filteredItems[indexToDelete])
-
       // Ambil item yang akan dihapus dari filteredItems
       const itemToDelete = filteredItems[indexToDelete]
 
@@ -188,10 +174,6 @@ const Detail = ({ id, setView }) => {
         toast.error('Item tidak ditemukan')
         return
       }
-
-      // Debug: log ID item
-      console.log('itemToDelete.id:', itemToDelete.id)
-      console.log('typeof itemToDelete.id:', typeof itemToDelete.id)
 
       // Konfirmasi sebelum hapus
       if (!window.confirm('Apakah Anda yakin ingin menghapus item ini?')) {
@@ -203,17 +185,12 @@ const Detail = ({ id, setView }) => {
 
       // Pastikan ID ada dan valid (bisa berupa string atau number)
       if (!itemId || itemId === '' || itemId === 0 || itemId === '0' || itemId === null || itemId === undefined) {
-        console.log('ID tidak valid:', itemId)
         toast.error('ID item tidak valid: ' + itemId)
         return
       }
 
-      console.log('Menghapus item dengan ID:', itemId)
-
       // Dispatch Redux action untuk delete dari database
       const result = await dispatch(deleteData(itemId))
-
-      console.log('Delete result:', result)
 
       if (result.type.endsWith('/fulfilled')) {
         toast.success('Item berhasil dihapus dari database')
@@ -241,10 +218,6 @@ const Detail = ({ id, setView }) => {
 
   const handleSubmitFile = async () => {
     try {
-      console.log('=== DEBUG FILE UPLOAD ===')
-      console.log('do_in_id:', id)
-      console.log('fileSerialNumber:', fileSerialNumber)
-
       if (!fileSerialNumber || fileSerialNumber.length === 0 || !fileSerialNumber[0]) {
         toast.error('File belum dipilih.')
         return
@@ -365,8 +338,6 @@ const Detail = ({ id, setView }) => {
       setSelectedPO(data)
     }
   }, [data])
-
-  console.log('filteredItems:', filteredItems)
 
   return (
     <>

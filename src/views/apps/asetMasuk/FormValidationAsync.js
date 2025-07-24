@@ -72,41 +72,6 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
     formState: { errors }
   } = useForm({ defaultValues })
 
-  // const onSubmit = async data => {
-  //   console.log('Form Data:', data)
-  //   if (data.tanggal_masuk) {
-  //     data.tanggal_masuk = format(new Date(data.tanggal_masuk), 'yyyy-MM-dd')
-  //   }
-
-  //   for (const key in data) {
-  //     if (fileEvidence && key === 'file_evidence') {
-  //       formData.append('file_evidence', fileEvidence)
-  //     } else {
-  //       formData.append(key, data[key])
-  //     }
-  //   }
-
-  //   setLoading(true)
-  //   try {
-  //     const response = await dispatch(addData(formData)).unwrap()
-  //     toast.success('Form Submitted')
-
-  //     {
-  //       response
-  //         ? setTimeout(() => {
-  //             setDetail(response.data)
-  //             setView('3')
-  //           }, 2000)
-  //         : console.log('Data tidak tersedia')
-  //     }
-  //   } catch (error) {
-  //     toast.error('Error')
-  //     console.log(error)
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const onSubmit = async data => {
     setLoading(true)
 
@@ -114,20 +79,6 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
       // Format tanggal masuk
       if (data.tanggal_masuk) {
         data.tanggal_masuk = format(new Date(data.tanggal_masuk), 'yyyy-MM-dd')
-      }
-
-      // 🔍 Log semua data yang akan dikirim dari form
-      console.log('=== Data Form yang Disubmit ===')
-      console.log(data)
-
-      // 🔍 Log isi fileEvidence sebelum dimasukkan ke FormData
-      if (fileEvidence.length > 0) {
-        console.log('=== File yang akan dikirim ===')
-        console.log('Nama File:', fileEvidence[0].name)
-        console.log('Ukuran File:', fileEvidence[0].size, 'bytes')
-        console.log('Tipe File:', fileEvidence[0].type)
-      } else {
-        console.log('Tidak ada file evidence yang dipilih.')
       }
 
       // Bangun FormData
@@ -143,12 +94,6 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
       // Tambahkan file evidence ke FormData jika ada
       if (fileEvidence.length > 0) {
         formData.append('file_evidence', fileEvidence[0])
-      }
-
-      // 🔍 Debug log FormData
-      console.log('=== FormData yang dikirim ke Backend ===')
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}:`, pair[1])
       }
 
       // Kirim ke backend

@@ -121,8 +121,6 @@ const PlanTable = () => {
     )
   }, [dispatch, value])
 
-  console.log('DATA PLAN:', store.data)
-
   const handleFilter = useCallback(
     val => {
       setValue(val)
@@ -336,7 +334,6 @@ const PlanTable = () => {
                     options={type.data}
                     getOptionLabel={option => option.nama || ''}
                     onChange={(e, value) => {
-                      console.log('Dipilih:', value)
                       if (value) {
                         setEditValue({ ...editValue, tipe_barang_id: value.id }) // yang sekarang sudah uuid
                       }

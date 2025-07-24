@@ -140,9 +140,7 @@ const AsetMasukTable = () => {
     )
   }, [dispatch, value])
 
-  useEffect(() => {
-    console.log('Data hasil fetch untuk DataGrid:', store.data)
-  }, [store.data])
+  useEffect(() => {}, [store.data])
 
   const handleFilter = useCallback(val => {
     setValue(val)
@@ -165,7 +163,6 @@ const AsetMasukTable = () => {
   }
 
   const handleDialogToggle = async row => {
-    console.log('Data: ', editValue)
     try {
       await dispatch(fetchPo()).unwrap()
 
@@ -371,16 +368,7 @@ const AsetMasukTable = () => {
                   onChange={(event, value) => setEditValue({ ...editValue, lokasi_gudang: value.lokasi })} // Simpan hanya id
                   getOptionLabel={option => option.lokasi || ''}
                   value={data_lokasi_gudang.find(option => option.lokasi === editValue.lokasi_gudang) || null} // Temukan objek berdasarkan title
-                  renderInput={params => (
-                    <CustomTextField
-                      placeholder='Lampung'
-                      {...params}
-                      label='Lokasi Gudang'
-
-                      // error={Boolean(errors.po_id)}
-                      // {...(errors.po_id && { helperText: 'This field is required' })}
-                    />
-                  )}
+                  renderInput={params => <CustomTextField placeholder='Lampung' {...params} label='Lokasi Gudang' />}
                 />
               </Grid>
 

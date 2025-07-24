@@ -15,8 +15,6 @@ const AuthGuard = ({ children, fallback = <Spinner /> }) => {
   const router = useRouter()
 
   useEffect(() => {
-    console.log('🧪 [AuthGuard State]', { initialized, loading, user })
-
     // Jika sudah diinisialisasi & tidak loading & user tidak ada, arahkan ke login
     if (initialized && !loading && !user) {
       const returnUrl = router.asPath !== '/' ? { returnUrl: router.asPath } : {}

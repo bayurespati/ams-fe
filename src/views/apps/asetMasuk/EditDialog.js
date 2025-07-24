@@ -20,10 +20,6 @@ const EditDialog = ({ setOpen, open, item, setItem }) => {
 
   const onSubmit = async e => {
     e.preventDefault()
-    console.log('=== EDIT ITEM VALUE ===')
-    console.log('UUID:', item.uuid)
-    console.log('Serial Number (sn):', item.sn)
-    console.log('Jumlah:', item.jumlah)
 
     try {
       const response = await dispatch(editData(item)).unwrap()
