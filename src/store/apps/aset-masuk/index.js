@@ -26,7 +26,6 @@ export const fetchData = createAsyncThunk('appDoIn/fetchData', async (params = {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}do-in`, {
     params
   })
-  console.log('🔥 FETCH Asset Masuk RESPONSE:', response.data) // ✅ log ini
   const modifiedData = replaceUuidWithId(response.data.data)
 
   return { data: modifiedData, params }

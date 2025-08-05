@@ -66,11 +66,8 @@ const PlanDetail = () => {
     dispatch(fetchPlans())
     dispatch(fetchPO())
     dispatch(fetchAsetMasuk())
-    console.log('📡 Dispatching fetchItemDoIn...')
     dispatch(fetchAllItem())
   }, [dispatch])
-
-  console.log('🟢 itemDoIn:', itemDoIn)
 
   const plan = plans.find(p => p.id === id)
   if (!plan) return <Typography>Loading...</Typography>
@@ -83,9 +80,6 @@ const PlanDetail = () => {
   const filteredItems = itemDoIn.filter(item => item.do_in_id?.toString() === selectedDoInId?.toString())
 
   const currentItems = filteredItems
-
-  console.log('🟢 selectedDoInId:', selectedDoInId)
-  console.log('🟢 filteredItems:', filteredItems)
 
   return (
     <Grid container spacing={4}>
@@ -112,9 +106,6 @@ const PlanDetail = () => {
                 <Typography>
                   <strong>IO: </strong> {plan.io}
                 </Typography>
-                {/* <Typography>
-                  <strong>Plan ID:</strong> {plan.id}
-                </Typography> */}
               </Grid>
               <Grid item xs={6}>
                 <Typography>
@@ -198,15 +189,6 @@ const PlanDetail = () => {
                           >
                             Asset In
                           </Button>
-                          {/* <Button
-                            size='small'
-                            variant='outlined'
-                            color='error'
-                            sx={{ minWidth: 100, whiteSpace: 'nowrap', px: 2, py: 1 }}
-                            onClick={() => handleOpenDialog('out', po)}
-                          >
-                            Asset Out
-                          </Button> */}
                         </Box>
                       </TableCell>
                     </TableRow>

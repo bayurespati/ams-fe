@@ -20,7 +20,6 @@ export const fetchData = createAsyncThunk('appItemDoIn/fetchData', async params 
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
     params
   })
-  console.log('🔥 FETCH DO-IN RESPONSE:', response.data) // ✅ log ini
 
   const replacedData = replaceUuidWithId(response.data.data)
 
@@ -90,7 +89,6 @@ export const appItemDoInSlice = createSlice({
   extraReducers: builder => {
     builder
       .addCase(fetchData.fulfilled, (state, action) => {
-        console.log('✅ fetchData.fulfilled payload:', action.payload)
         state.params = action.payload.params
         state.allData = action.payload.data
         state.total = action.payload.data.length

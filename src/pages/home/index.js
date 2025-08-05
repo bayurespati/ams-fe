@@ -62,7 +62,6 @@ const Dashboard = () => {
     out: 0
   }))
 
-  console.log('Aset Masuk:', asetMasuk)
   // Buat peta id DO-IN → tanggal_masuk
   const doInDateMap = asetMasuk.reduce((map, doIn) => {
     if (doIn.id && doIn.tanggal_masuk) {
