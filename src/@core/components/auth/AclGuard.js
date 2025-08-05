@@ -39,7 +39,6 @@ const AclGuard = ({ aclAbilities, children, guestGuard = false, authGuard = true
     if (auth.user && auth.user.role && !guestGuard && router.route === '/') {
       const homeRoute = getHomeRoute(auth.user.role)
       if (homeRoute !== '/') {
-        console.log('🔁 Redirecting to:', homeRoute)
         router.replace(homeRoute)
       }
     }
@@ -47,9 +46,11 @@ const AclGuard = ({ aclAbilities, children, guestGuard = false, authGuard = true
 
   // 🔓 Untuk halaman publik atau error
   if (guestGuard || router.route === '/404' || router.route === '/500' || !authGuard) {
-    return auth.user && ability
-      ? <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
-      : <>{children}</>
+    return auth.user && ability ? (
+      <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
+    ) : (
+      <>{children}</>
+    )
   }
 
   // 🕒 Saat auth belum selesai atau ability belum siap

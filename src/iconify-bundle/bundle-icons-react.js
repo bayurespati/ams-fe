@@ -25,7 +25,7 @@ const sources = {
 
     // Custom file with only few icons
 
-/* 
+    /* 
      {
       filename: require.resolve('@iconify/json/json/line-md.json'),
       icons: ['home-twotone-alt', 'github', 'document-list', 'document-code', 'image-twotone']
@@ -40,11 +40,10 @@ const sources = {
     // 'json/gg.json'
   ],
 
-/* 
+  /* 
    icons: ['bx:basket', 'bi:airplane-engines', 'uit:adobe-alt', 'fa6-regular:comment', 'twemoji:auto-rickshaw'],
 */
   svg: [
-
     /*
         {
             dir: 'src/iconify-bundle/svg',
@@ -135,7 +134,6 @@ const target = 'src/iconify-bundle/icons-bundle-react.js'
       // Minify data and add to bundle
       minifyIconSet(content)
       bundle += 'addCollection(' + JSON.stringify(content) + ');\n'
-      console.log(`Bundled icons from ${filename}`)
     }
   }
 
@@ -194,7 +192,6 @@ const target = 'src/iconify-bundle/icons-bundle-react.js'
         // Update icon from SVG instance
         iconSet.fromSVG(name, svg)
       })
-      console.log(`Bundled ${iconSet.count()} icons from ${source.dir}`)
 
       // Export to JSON
       const content = iconSet.export()
@@ -204,7 +201,6 @@ const target = 'src/iconify-bundle/icons-bundle-react.js'
 
   // Save to file
   await fs.writeFile(target, bundle, 'utf8')
-  console.log(`Saved ${target} (${bundle.length} bytes)`)
 })().catch(err => {
   console.error(err)
 })

@@ -22,12 +22,10 @@ const replaceSingleUuidWithId = data => {
 }
 
 // Async thunk
-export const fetchData = createAsyncThunk('appDoIn/fetchData', async params => {
+export const fetchData = createAsyncThunk('appDoIn/fetchData', async (params = {}) => {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}do-in`, {
     params
   })
-
-  // Replace uuid with id
   const modifiedData = replaceUuidWithId(response.data.data)
 
   return { data: modifiedData, params }
@@ -59,15 +57,15 @@ export const deleteData = createAsyncThunk('appDoIn/deleteData', async id => {
 })
 
 // Fungsi search (case-insensitive)
-const searchDoIn = (data, query) => {
+const searchDoIn = (data, query = '') => {
   const queryLowered = query.toLowerCase()
 
   return data.filter(
     doIn =>
-      doIn.no_do.toLowerCase().includes(queryLowered) ||
-      doIn.lokasi_gudang.toLowerCase().includes(queryLowered) ||
-      doIn.tanggal_masuk.toLowerCase().includes(queryLowered) ||
-      doIn.no_gr.toLowerCase().includes(queryLowered) ||
+      doIn.no_do?.toLowerCase().includes(queryLowered) ||
+      doIn.lokasi_gudang?.toLowerCase().includes(queryLowered) ||
+      doIn.tanggal_masuk?.toLowerCase().includes(queryLowered) ||
+      doIn.no_gr?.toLowerCase().includes(queryLowered) ||
       (doIn.po_id?.toString()?.toLowerCase() || '').includes(queryLowered)
   )
 }
@@ -92,7 +90,7 @@ export const appDoInSlice = createSlice({
       state.params = action.payload.params
       state.allData = action.payload.data
       state.total = action.payload.data.length
-      state.data = searchDoIn(state.allData, action.payload.params.q)
+      state.data = searchDoIn(state.allData, action.payload.params?.q || '')
     })
     builder.addCase(addData.fulfilled, (state, action) => {
       if (action.payload) {

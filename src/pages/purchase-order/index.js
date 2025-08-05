@@ -103,8 +103,6 @@ const defaultColumns = [
     headerClassName: 'super-app-theme--header',
     headerName: 'cost_center',
     renderCell: ({ row }) => {
-      console.log(row)
-
       return <Typography sx={{ color: 'text.secondary' }}>{row.cost_center}</Typography>
     }
   }
@@ -283,8 +281,6 @@ const PurchaseOrderTable = () => {
       formData.append('file_boq', newFileBoq)
     }
 
-    console.log('Edit Value:', editValue)
-
     handleEditPurchaseOrder(formData)
     setEditDialogOpen(false)
   }
@@ -433,8 +429,6 @@ const PurchaseOrderTable = () => {
                     label='Tanggal PO SPK PKS'
                     value={editValue.tanggal_po_spk_pks}
                     onChange={e => {
-                      console.log('Date picker onChange - PO:', e)
-                      console.log('Type:', typeof e)
                       setEditValue({ ...editValue, tanggal_po_spk_pks: e })
                     }}
                   />
@@ -446,8 +440,6 @@ const PurchaseOrderTable = () => {
                     label='Tanggal Delivery'
                     value={editValue.tanggal_delivery}
                     onChange={e => {
-                      console.log('Date picker onChange - Delivery:', e)
-                      console.log('Type:', typeof e)
                       setEditValue({ ...editValue, tanggal_delivery: e })
                     }}
                   />

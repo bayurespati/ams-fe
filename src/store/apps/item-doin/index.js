@@ -67,8 +67,8 @@ export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
 
 // ========== Utility ==========
 const searchItemDoIn = (data, query) => {
-  const queryLowered = query.toLowerCase()
-  return data.filter(item => item.do_in_id.includes(queryLowered))
+  if (!query || query === '') return data // 👈 jangan filter kalau kosong
+  return data.filter(item => item.do_in_id === query)
 }
 
 // ========== Slice ==========
@@ -89,20 +89,17 @@ export const appItemDoInSlice = createSlice({
   extraReducers: builder => {
     builder
       .addCase(fetchData.fulfilled, (state, action) => {
-        console.log('[FETCH] Payload:', action.payload)
         state.params = action.payload.params
         state.allData = action.payload.data
         state.total = action.payload.data.length
-        state.data = searchItemDoIn(state.allData, action?.payload?.params?.q || '')
+        state.data = searchItemDoIn(state.allData, action.payload.params?.q || '')
       })
       .addCase(addData.fulfilled, (state, action) => {
-        console.log('[ADD] Payload:', action.payload)
         state.allData.push(action.payload.data)
         state.data = searchItemDoIn(state.allData, state.params?.q || '')
         state.total = state.allData.length
       })
       .addCase(editData.fulfilled, (state, action) => {
-        console.log('[EDIT] Payload:', action.payload)
         const index = state.data.findIndex(item => item.id === action.payload.data.id)
         if (index !== -1) {
           state.data[index] = action.payload.data
@@ -111,7 +108,6 @@ export const appItemDoInSlice = createSlice({
         }
       })
       .addCase(deleteData.fulfilled, (state, action) => {
-        console.log('[DELETE] ID:', action.payload.id)
         state.allData = state.allData.filter(item => item.id !== action.payload.id)
         state.data = searchItemDoIn(state.allData, state.params?.q || '')
         state.total = state.allData.length
