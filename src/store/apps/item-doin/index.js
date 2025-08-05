@@ -20,6 +20,7 @@ export const fetchData = createAsyncThunk('appItemDoIn/fetchData', async params 
   const response = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}item-do-in`, {
     params
   })
+  console.log('🔥 FETCH DO-IN RESPONSE:', response.data) // ✅ log ini
 
   const replacedData = replaceUuidWithId(response.data.data)
 
@@ -67,8 +68,8 @@ export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
 
 // ========== Utility ==========
 const searchItemDoIn = (data, query) => {
-  const queryLowered = query.toLowerCase()
-  return data.filter(item => item.do_in_id.includes(queryLowered))
+  if (!query || query === '') return data // 👈 jangan filter kalau kosong
+  return data.filter(item => item.do_in_id === query)
 }
 
 // ========== Slice ==========
@@ -89,10 +90,11 @@ export const appItemDoInSlice = createSlice({
   extraReducers: builder => {
     builder
       .addCase(fetchData.fulfilled, (state, action) => {
+        console.log('✅ fetchData.fulfilled payload:', action.payload)
         state.params = action.payload.params
         state.allData = action.payload.data
         state.total = action.payload.data.length
-        state.data = searchItemDoIn(state.allData, action?.payload?.params?.q || '')
+        state.data = searchItemDoIn(state.allData, action.payload.params?.q || '')
       })
       .addCase(addData.fulfilled, (state, action) => {
         state.allData.push(action.payload.data)
