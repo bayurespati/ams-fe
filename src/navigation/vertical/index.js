@@ -4,19 +4,22 @@ const navigation = () => {
       title: 'Home',
       path: '/home',
       icon: 'tabler:smart-home',
-      auth: false
+      auth: false,
+      roles: ['Manager Gudang', 'VP']
     },
     {
       title: 'Plan',
       path: '/plan',
       icon: 'tabler:notes',
-      auth: false
+      auth: false,
+      roles: ['Manager Gudang']
     },
     {
       title: 'Purchase Order',
       path: '/purchase-order',
       icon: 'tabler:notes',
-      auth: false
+      auth: false,
+      roles: ['Manager Gudang']
     },
     {
       title: 'Aset',
@@ -48,7 +51,8 @@ const navigation = () => {
           auth: false
         }
       ],
-      auth: false
+      auth: false,
+      roles: ['Admin Gudang']
     },
     {
       title: 'Master Data',
@@ -77,7 +81,7 @@ const navigation = () => {
         {
           title: 'Brand',
           path: '/pengaturan/brand',
-          auth: false,
+          auth: false
         },
         {
           title: 'Company',
@@ -85,7 +89,8 @@ const navigation = () => {
           auth: false
         }
       ],
-      auth: false
+      auth: false,
+      roles: ['Admin Gudang']
     },
     {
       path: '/acl',
@@ -93,9 +98,34 @@ const navigation = () => {
       subject: 'acl-page',
       title: 'Access Control',
       icon: 'tabler:shield',
-      auth: false
+      auth: false,
+      roles: ['Admin Gudang']
     }
   ]
 }
 
-export default navigation
+const VerticalNavItems = () => {
+  const storedUser = localStorage.getItem('userData')
+  const user = storedUser ? JSON.parse(storedUser) : {}
+  const role = user.role || 'guest'
+
+  const filterMenu = items => {
+    return items
+      .filter(item => {
+        // If roles are not defined, show to all
+        if (!item.roles) return true
+
+        return item.roles.includes(role)
+      })
+      .map(item => ({
+        ...item,
+        children: item.children ? filterMenu(item.children) : undefined
+      }))
+  }
+
+  console.log(filterMenu, role)
+
+  return filterMenu(navigation())
+}
+
+export default VerticalNavItems

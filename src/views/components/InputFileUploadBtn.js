@@ -45,11 +45,13 @@ const InputFileUploadBtn = ({ files, setFiles, accept = '.pdf,.jpg,.png,.jpeg,.g
 
     if (!isValidExt) {
       setError(`Only files with type/extension: ${accept} are allowed.`)
+
       return
     }
 
     if (!isValidSize) {
       setError(`File size must be less than ${maxSizeMB} MB.`)
+
       return
     }
 

@@ -27,6 +27,7 @@ import Button from '@mui/material/Button'
 
 // ** Chart
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+
 const Dashboard = () => {
   const dispatch = useDispatch()
   const plans = useSelector(state => state.plan.data || [])
@@ -67,6 +68,7 @@ const Dashboard = () => {
     if (doIn.id && doIn.tanggal_masuk) {
       map[doIn.id] = new Date(doIn.tanggal_masuk)
     }
+
     return map
   }, {})
 
