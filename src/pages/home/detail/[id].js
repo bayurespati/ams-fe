@@ -35,6 +35,8 @@ const PlanDetail = () => {
   const asetMasuk = useSelector(state => state.asetMasuk?.data || [])
   const itemDoIn = useSelector(state => state.itemDoin?.allData || [])
 
+  console.log('Data plan: ', plans)
+
   const [openDialog, setOpenDialog] = useState(false)
   const [dialogType, setDialogType] = useState('in')
   const [selectedPO, setSelectedPO] = useState(null)
@@ -93,7 +95,7 @@ const PlanDetail = () => {
         <Card>
           <CardContent>
             <Typography variant='h5' sx={{ fontWeight: 600 }}>
-              Detail {plan.judul} - {plan.nama_project}
+              Detail {plan.judul} - {plan.project_id}
             </Typography>
             <Grid container spacing={2} mt={2}>
               <Grid item xs={6}>
@@ -101,7 +103,7 @@ const PlanDetail = () => {
                   <strong>Nama Plan:</strong> {plan.judul}
                 </Typography>
                 <Typography>
-                  <strong>Nama Project:</strong> {plan.nama_project}
+                  <strong>Nama Project:</strong> {plan.project_id}
                 </Typography>
                 <Typography>
                   <strong>IO: </strong> {plan.io}

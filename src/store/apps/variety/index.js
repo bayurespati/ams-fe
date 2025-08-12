@@ -104,14 +104,14 @@ export const appVarietySlice = createSlice({
     })
 
     builder.addCase(addData.fulfilled, (state, action) => {
-      const newData = { ...action.payload.data, id: action.payload.data.uuid }
+      const newData = action.payload // langsung object variety
       state.data.push(newData)
       state.allData.push(newData)
       state.total = state.allData.length
     })
 
     builder.addCase(editData.fulfilled, (state, action) => {
-      const updated = { ...action.payload.data, id: action.payload.data.uuid }
+      const updated = action.payload // Sudah dalam bentuk { id, nama, ... }
 
       const index = state.data.findIndex(item => item.id === updated.id)
       if (index !== -1) {
