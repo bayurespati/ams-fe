@@ -95,7 +95,7 @@ const PlanDetail = () => {
         <Card>
           <CardContent>
             <Typography variant='h5' sx={{ fontWeight: 600 }}>
-              Detail {plan.judul} - {plan.project_id}
+              Detail {plan.judul} - {plan.project_id.name}
             </Typography>
             <Grid container spacing={2} mt={2}>
               <Grid item xs={6}>
