@@ -5,21 +5,21 @@ const navigation = () => {
       path: '/home',
       icon: 'tabler:smart-home',
       auth: false,
-      roles: ['Manager Gudang', 'VP']
+      roles: ['Manager Gudang', 'Admin Gudang']
     },
     {
       title: 'Plan',
       path: '/plan',
       icon: 'tabler:notes',
       auth: false,
-      roles: ['Manager Gudang']
+      roles: ['Manager Gudang', 'Admin Gudang']
     },
     {
       title: 'Purchase Order',
       path: '/purchase-order',
       icon: 'tabler:notes',
       auth: false,
-      roles: ['Manager Gudang']
+      roles: ['Manager Gudang', 'Admin Gudang']
     },
     {
       title: 'Aset',
