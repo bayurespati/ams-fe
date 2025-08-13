@@ -43,7 +43,7 @@ const navigation = () => {
         {
           title: 'Perbaikan',
           path: '/aset/perbaikan',
-          auth: false
+          auth: falseVP
         },
         {
           title: 'Dismantle',

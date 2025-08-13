@@ -114,6 +114,7 @@ const Detail = ({ id, setView }) => {
 
       if (!payload.items || payload.items.length === 0) {
         toast.error('Tidak ada item yang valid untuk disubmit')
+
         return
       }
 
@@ -172,6 +173,7 @@ const Detail = ({ id, setView }) => {
 
       if (!itemToDelete) {
         toast.error('Item tidak ditemukan')
+
         return
       }
 
@@ -186,6 +188,7 @@ const Detail = ({ id, setView }) => {
       // Pastikan ID ada dan valid (bisa berupa string atau number)
       if (!itemId || itemId === '' || itemId === 0 || itemId === '0' || itemId === null || itemId === undefined) {
         toast.error('ID item tidak valid: ' + itemId)
+
         return
       }
 
@@ -220,6 +223,7 @@ const Detail = ({ id, setView }) => {
     try {
       if (!fileSerialNumber || fileSerialNumber.length === 0 || !fileSerialNumber[0]) {
         toast.error('File belum dipilih.')
+
         return
       }
 
