@@ -64,6 +64,11 @@ const navigation = () => {
           title: 'List Aset',
           path: '/rekap-aset/list-aset',
           auth: false
+        },
+        {
+          title: 'Label Aset',
+          path: '/rekap-aset/label-aset',
+          auth: false
         }
       ],
       auth: false,
@@ -138,8 +143,6 @@ const VerticalNavItems = () => {
         children: item.children ? filterMenu(item.children) : undefined
       }))
   }
-
-  console.log(filterMenu, role)
 
   return filterMenu(navigation())
 }
