@@ -43,7 +43,7 @@ const navigation = () => {
         {
           title: 'Perbaikan',
           path: '/aset/perbaikan',
-          auth: falseVP
+          auth: false
         },
         {
           title: 'Dismantle',
@@ -54,6 +54,27 @@ const navigation = () => {
       auth: false,
       roles: ['Admin Gudang']
     },
+
+    // 🔹 Menu Rekap Aset baru
+    {
+      title: 'Rekap Aset',
+      icon: 'tabler:report',
+      children: [
+        {
+          title: 'List Aset',
+          path: '/rekap-aset/list-aset',
+          auth: false
+        },
+        {
+          title: 'Label Aset',
+          path: '/rekap-aset/label-aset',
+          auth: false
+        }
+      ],
+      auth: false,
+      roles: ['Manager Gudang', 'Admin Gudang']
+    },
+
     {
       title: 'Master Data',
       icon: 'tabler:settings',
@@ -122,8 +143,6 @@ const VerticalNavItems = () => {
         children: item.children ? filterMenu(item.children) : undefined
       }))
   }
-
-  console.log(filterMenu, role)
 
   return filterMenu(navigation())
 }
