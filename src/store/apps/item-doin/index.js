@@ -5,6 +5,7 @@ import axios from 'axios'
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
+
     return { id: uuid, uuid, ...rest } // ✅ Simpan uuid juga
   })
 }
@@ -12,6 +13,7 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) return {}
   const { uuid, ...rest } = data
+
   return { id: uuid, uuid, ...rest } // ✅ Simpan uuid juga
 }
 
@@ -68,6 +70,7 @@ export const deleteData = createAsyncThunk('appPlan/deleteData', async id => {
 // ========== Utility ==========
 const searchItemDoIn = (data, query) => {
   if (!query || query === '') return data // 👈 jangan filter kalau kosong
+
   return data.filter(item => item.do_in_id === query)
 }
 

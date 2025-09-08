@@ -24,7 +24,7 @@ const AuthProvider = ({ children }) => {
   const router = useRouter()
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
-  // ✅ Cek dan inisialisasi sesi saat pertama load
+  // ? Cek dan inisialisasi sesi saat pertama load
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('access_token')
@@ -36,12 +36,15 @@ const AuthProvider = ({ children }) => {
         try {
           const res = await axios.get(`${baseUrl}auth/token/detail`)
           const userData = res.data.data || {}
-          userData.role = userData.role || 'admin'
+
+          // Ambil role user
+          // const roleRes = await axios.get(`${baseUrl}iams/role`)
+          userData.role = 'Admin Gudang'
 
           setUser(userData)
           localStorage.setItem('userData', JSON.stringify(userData))
         } catch (err) {
-          console.error('❌ Gagal ambil detail user:', err)
+          console.error('? Gagal ambil detail user:', err)
           localStorage.clear()
           setUser(null)
           if (!router.pathname.includes('/login')) router.replace('/login')
@@ -62,7 +65,7 @@ const AuthProvider = ({ children }) => {
     initAuth()
   }, [])
 
-  // ✅ Login
+  // ? Login
   const handleLogin = async (params, errorCallback) => {
     try {
       const res = await axios.post(`${baseUrl}auth/token/request`, params)
@@ -78,7 +81,10 @@ const AuthProvider = ({ children }) => {
       // Ambil data user
       const detailRes = await axios.get(`${baseUrl}auth/token/detail`)
       const userData = detailRes.data.data || {}
-      userData.role = userData.role || 'admin'
+
+      // Ambil role user
+      const roleRes = await axios.get(`${baseUrl}iams/role`)
+      userData.role = roleRes.data.name || 'Admin Gudang'
 
       setUser(userData)
       localStorage.setItem('userData', JSON.stringify(userData))
@@ -86,12 +92,12 @@ const AuthProvider = ({ children }) => {
       const returnUrl = router.query.returnUrl || '/'
       router.replace(returnUrl)
     } catch (err) {
-      console.error('❌ Login error:', err)
+      console.error('? Login error:', err)
       if (errorCallback) errorCallback(err)
     }
   }
 
-  // ✅ Logout
+  // ? Logout
   const handleLogout = () => {
     localStorage.clear()
     delete axios.defaults.headers.common['Authorization']

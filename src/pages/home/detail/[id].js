@@ -267,6 +267,7 @@ const PlanDetail = () => {
                   .filter(item => relatedPOIds.includes(item.po_id?.toString()))
                   .map((item, index) => {
                     const po = pos.find(p => p.id?.toString() === item.po_id?.toString())
+
                     return (
                       <TableRow key={index}>
                         <TableCell sx={{ fontSize: '0.75rem' }}>{po?.nama_pekerjaan || '-'}</TableCell>

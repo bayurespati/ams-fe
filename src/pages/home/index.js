@@ -68,6 +68,16 @@ const Dashboard = () => {
     out: 0
   }))
 
+  // Buat peta id DO-IN → tanggal_masuk
+  const doInDateMap = asetMasuk.reduce((map, doIn) => {
+    if (doIn.id && doIn.tanggal_masuk) {
+      map[doIn.id] = new Date(doIn.tanggal_masuk)
+    }
+
+    return map
+  }, {})
+
+  // Hitung totalIn dan masukkan ke monthlyData
   asetMasuk.forEach(doIn => {
     const date = new Date(doIn.tanggal_masuk)
     const monthIndex = date.getMonth()
