@@ -252,6 +252,26 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
 
               <Grid item xs={12}>
                 <Controller
+                  name='penerima'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field: { value, onChange } }) => (
+                    <CustomTextField
+                      fullWidth
+                      value={value}
+                      label='Penerima'
+                      onChange={onChange}
+                      placeholder='Nama penerima barang'
+                      error={Boolean(errors.penerima)}
+                      aria-describedby='validation-async-penerima'
+                      {...(errors.penerima && { helperText: 'This field is required' })}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Controller
                   name='keterangan'
                   control={control}
                   rules={{ required: true }}

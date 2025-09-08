@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 // ** Axios & Redux Thunks
@@ -7,8 +7,6 @@ import { fetchData as fetchPlans } from 'src/store/apps/plan'
 import { fetchData as fetchPO } from 'src/store/apps/purchase-order'
 import { fetchData as fetchAsetMasuk } from 'src/store/apps/aset-masuk'
 import { fetchData as fetchItemDoIn } from 'src/store/apps/item-doin'
-
-//import { fetchData as fetchAsetKeluar } from 'src/store/apps/aset-keluar'
 
 // ** MUI Imports
 import Grid from '@mui/material/Grid'
@@ -43,20 +41,27 @@ const Dashboard = () => {
     { id: 5, jumlah_barang: 15, created_at: '2025-06-01T12:45:00Z' }
   ]
 
+  // State filter bulan
+  const [selectedMonth, setSelectedMonth] = useState(null)
+  const [filteredPlans, setFilteredPlans] = useState([])
+
   useEffect(() => {
     dispatch(fetchPlans())
     dispatch(fetchPO())
     dispatch(fetchAsetMasuk())
-    dispatch(fetchItemDoIn()) // ✅ Ambil item DO-IN
+    dispatch(fetchItemDoIn())
   }, [dispatch])
+
+  useEffect(() => {
+    // Saat plans berubah, isi filteredPlans dengan semua data
+    setFilteredPlans(plans)
+  }, [plans])
 
   const totalPlans = plans.length
   const totalPO = purchaseOrders.length
   const totalIn = asetMasuk.length
-
   const totalOut = asetKeluar.reduce((sum, item) => sum + (item.jumlah_barang || 0), 0)
 
-  // Buat data untuk chart bulanan
   const monthlyData = Array.from({ length: 12 }, (_, i) => ({
     month: new Date(0, i).toLocaleString('default', { month: 'short' }),
     in: 0,
@@ -73,38 +78,52 @@ const Dashboard = () => {
   }, {})
 
   // Hitung totalIn dan masukkan ke monthlyData
-
   asetMasuk.forEach(doIn => {
     const date = new Date(doIn.tanggal_masuk)
     const monthIndex = date.getMonth()
-
     if (!isNaN(monthIndex)) {
-      monthlyData[monthIndex].in += 1 // Satu entri = satu aset masuk
+      monthlyData[monthIndex].in += 1
     }
   })
 
   asetKeluar.forEach(item => {
     const date = new Date(item.created_at)
     const monthIndex = date.getMonth()
-
     if (!isNaN(monthIndex) && monthIndex >= 0 && monthIndex < 12) {
       monthlyData[monthIndex].out += item.jumlah_barang || 0
-    } else {
-      console.warn('Invalid created_at in asetKeluar:', item.created_at)
     }
   })
 
   plans.forEach(plan => {
-    const date = new Date(plan.created_at)
-    const monthIndex = date.getMonth()
-
-    if (!isNaN(monthIndex) && monthIndex >= 0 && monthIndex < 12) {
-      if (plan.tipe_transaksi === 'masuk') monthlyData[monthIndex].in += plan.jumlah_barang || 0
-      if (plan.tipe_transaksi === 'keluar') monthlyData[monthIndex].out += plan.jumlah_barang || 0
-    } else {
-      console.warn('Tanggal tidak valid pada plan:', plan)
+    if (plan.created_at) {
+      const date = new Date(plan.created_at)
+      const monthIndex = date.getMonth()
+      if (!isNaN(monthIndex)) {
+        if (plan.tipe_transaksi === 'masuk') monthlyData[monthIndex].in += plan.jumlah_barang || 0
+        if (plan.tipe_transaksi === 'keluar') monthlyData[monthIndex].out += plan.jumlah_barang || 0
+      }
     }
   })
+
+  const handleBarClick = data => {
+    if (data && data.activeLabel) {
+      const monthName = data.activeLabel
+      const monthIndex = new Date(`${monthName} 1, 2025`).getMonth()
+
+      // Klik bulan yang sama -> reset semua
+      if (selectedMonth === monthName) {
+        setSelectedMonth(null)
+        setFilteredPlans(plans)
+      } else {
+        const filtered = plans.filter(plan => {
+          if (!plan.created_at) return false
+          return new Date(plan.created_at).getMonth() === monthIndex
+        })
+        setSelectedMonth(monthName)
+        setFilteredPlans(filtered)
+      }
+    }
+  }
 
   return (
     <Grid container spacing={6}>
@@ -142,13 +161,13 @@ const Dashboard = () => {
         </Card>
       </Grid>
 
-      {/* Line Chart */}
+      {/* Bar Chart */}
       <Grid item xs={12}>
         <Card>
           <CardHeader title='Grafik Aset Masuk & Keluar per Bulan' />
           <CardContent>
             <ResponsiveContainer width='100%' height={300}>
-              <BarChart data={monthlyData}>
+              <BarChart data={monthlyData} onClick={handleBarClick}>
                 <CartesianGrid strokeDasharray='3 3' />
                 <XAxis dataKey='month' />
                 <YAxis />
@@ -162,10 +181,10 @@ const Dashboard = () => {
         </Card>
       </Grid>
 
-      {/* Plan Table */}
+      {/* Table Plans */}
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='Daftar Plan' />
+          <CardHeader title={selectedMonth ? `Data Plan Bulan ${selectedMonth}` : 'Daftar Semua Plan'} />
           <CardContent>
             <TableContainer component={Paper}>
               <Table>
@@ -179,7 +198,7 @@ const Dashboard = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {plans.map((plan, index) => (
+                  {filteredPlans.map((plan, index) => (
                     <TableRow key={plan.id}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{plan.judul}</TableCell>
