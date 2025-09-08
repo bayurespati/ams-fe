@@ -38,8 +38,8 @@ const AuthProvider = ({ children }) => {
           const userData = res.data.data || {}
 
           // Ambil role user
-          // const roleRes = await axios.get(`${baseUrl}iams/role`)
-          userData.role = 'Admin Gudang'
+          const roleRes = await axios.get(`${baseUrl}iams/role`)
+          userData.role = roleRes.data.name || 'Admin Gudang'
 
           setUser(userData)
           localStorage.setItem('userData', JSON.stringify(userData))
@@ -63,7 +63,7 @@ const AuthProvider = ({ children }) => {
     }
 
     initAuth()
-  }, [])
+  })
 
   // ? Login
   const handleLogin = async (params, errorCallback) => {

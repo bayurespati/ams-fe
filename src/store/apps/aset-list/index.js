@@ -7,6 +7,7 @@ import axios from 'axios'
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
+
     return { id: uuid, ...rest }
   })
 }
@@ -14,9 +15,11 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) {
     console.error('replaceSingleUuidWithId: received undefined data')
+
     return {}
   }
   const { uuid, ...rest } = data
+
   return { id: uuid, ...rest }
 }
 
@@ -32,17 +35,20 @@ export const fetchData = createAsyncThunk('appAset/fetchData', async (params = {
 export const addData = createAsyncThunk('appAset/addData', async newAset => {
   const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}aset`, newAset)
   const replaced = replaceSingleUuidWithId(response.data.data)
+
   return { ...response.data, data: replaced }
 })
 
 export const editData = createAsyncThunk('appAset/editData', async updatedAset => {
   const response = await axios.put(`${process.env.NEXT_PUBLIC_AMS_URL}aset/${updatedAset.id}`, updatedAset)
   const replaced = replaceSingleUuidWithId(response.data.data)
+
   return { ...response.data, data: replaced }
 })
 
 export const deleteData = createAsyncThunk('appAset/deleteData', async id => {
   const response = await axios.delete(`${process.env.NEXT_PUBLIC_AMS_URL}aset/${id}`)
+
   return { message: response.data.message, id }
 })
 

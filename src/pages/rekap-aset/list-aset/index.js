@@ -65,6 +65,7 @@ const ListAsetTable = () => {
 
   // ** Hooks
   const dispatch = useDispatch()
+
   // const store = useSelector(state => state.rekapAset)
 
   useEffect(() => {

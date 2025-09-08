@@ -117,6 +117,7 @@ const Dashboard = () => {
       } else {
         const filtered = plans.filter(plan => {
           if (!plan.created_at) return false
+
           return new Date(plan.created_at).getMonth() === monthIndex
         })
         setSelectedMonth(monthName)

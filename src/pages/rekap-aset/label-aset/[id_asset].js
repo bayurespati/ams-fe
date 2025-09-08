@@ -34,6 +34,7 @@ const AssetDetailPage = () => {
 
   // state untuk edit
   const [editOpen, setEditOpen] = useState(false)
+
   const [editValue, setEditValue] = useState({
     uuid: '',
     sn: '',
@@ -58,6 +59,7 @@ const AssetDetailPage = () => {
     if (!id_asset) return
     try {
       setLoading(true)
+
       const res = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}asset-label/by-id-asset`, {
         params: { id_asset }
       })

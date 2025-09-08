@@ -64,6 +64,7 @@ const LabelAsetTable = () => {
   const [idAssetOptions, setIdAssetOptions] = useState([])
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
   const [dialogOpen, setDialogOpen] = useState(false)
+
   const [formValue, setFormValue] = useState({
     internal_order: '',
     id_asset: '',
@@ -102,11 +103,13 @@ const LabelAsetTable = () => {
   const handleDetailClick = row => {
     router.push(`/rekap-aset/label-aset/${row.id_asset}`)
   }
+
   const handleDownloadBarcode = async (id_asset, total, barcode_count) => {
     try {
       // kalau barcode_count masih 0, hentikan aja
       if (barcode_count === 0) {
         alert('Belum ada barcode yang bisa di-download')
+
         return
       }
 
