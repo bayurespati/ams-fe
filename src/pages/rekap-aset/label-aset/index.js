@@ -19,6 +19,7 @@ import { DataGrid } from '@mui/x-data-grid'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
+import toast from 'react-hot-toast'
 
 // ** Custom Components
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -42,6 +43,7 @@ const defaultColumns = [
     headerName: 'ID Asset',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.id_asset}</Typography>
   },
+
   {
     flex: 0.2,
     field: 'total',
@@ -69,7 +71,8 @@ const LabelAsetTable = () => {
     internal_order: '',
     id_asset: '',
     total: '',
-    barcode_count: ''
+    barcode_count: '',
+    description_label: ''
   })
 
   useEffect(() => {
@@ -95,9 +98,16 @@ const LabelAsetTable = () => {
 
   const handleSubmit = async e => {
     e.preventDefault()
-    await dispatch(addData(formValue))
-    dispatch(fetchData())
-    setDialogOpen(false)
+
+    try {
+      await dispatch(addData(formValue)).unwrap()
+      dispatch(fetchData())
+      toast.success('Label Aset berhasil ditambahkan!')
+      setDialogOpen(false)
+    } catch (err) {
+      console.error('❌ Gagal kirim data:', err)
+      toast.error('Gagal menambahkan Label Aset! ❌')
+    }
   }
 
   const handleDetailClick = row => {
@@ -232,6 +242,14 @@ const LabelAsetTable = () => {
                 </MenuItem>
               ))}
             </CustomTextField>
+
+            <CustomTextField
+              fullWidth
+              sx={{ mb: 4 }}
+              label='Description Label'
+              value={formValue.description_label}
+              onChange={e => setFormValue({ ...formValue, description_label: e.target.value })}
+            />
 
             <CustomTextField
               fullWidth

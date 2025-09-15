@@ -9,7 +9,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 11,
     sourceType: 'module',
-    project: './jsconfig.json',
     ecmaFeatures: {
       jsx: true,
       modules: true,

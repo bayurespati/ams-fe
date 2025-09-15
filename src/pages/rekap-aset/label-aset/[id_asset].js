@@ -20,6 +20,7 @@ import DialogActions from '@mui/material/DialogActions'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import { Icon } from '@iconify/react'
+import toast from 'react-hot-toast'
 
 // ** Custom Components
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -71,15 +72,13 @@ const AssetDetailPage = () => {
     }
   }
 
-  // useEffect untuk fetch pertama kali
   useEffect(() => {
     fetchDetail()
-  }, [id_asset])
+  }, [id_asset, fetchDetail])
 
   // handleEditSave setelah update sukses
   const handleEditSave = async () => {
     try {
-      // pastikan status dalam bentuk number
       const payload = {
         ...editValue,
         status: Number(editValue.status)
@@ -87,11 +86,14 @@ const AssetDetailPage = () => {
 
       await dispatch(updateAsset(payload)).unwrap()
 
-      // kalau sukses, tutup dialog & fetch ulang data
+      // ✅ pakai toast
+      toast.success('Asset berhasil diupdate!')
+
       setEditOpen(false)
       await fetchDetail()
     } catch (error) {
       console.error('❌ Gagal update asset:', error)
+      toast.error('Gagal mengupdate asset!')
     }
   }
 

@@ -83,6 +83,8 @@
     "@iconify/tools": "2.2.6",
     "@iconify/types": "2.0.0",
     "@iconify/utils": "2.1.5",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "eslint": "8.36.0",
     "eslint-config-next": "13.3.2",
     "eslint-config-prettier": "8.7.0",

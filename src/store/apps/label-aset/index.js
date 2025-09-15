@@ -110,12 +110,18 @@ export const appLabelAsetSlice = createSlice({
       }
     })
     builder.addCase(updateAsset.fulfilled, (state, action) => {
-      const index = state.allData.findIndex(item => item.id === action.payload.data.id)
+      const updated = action.payload // langsung object, bukan payload.data
+      const index = state.allData.findIndex(item => item.id === updated.id)
+
       if (index !== -1) {
-        state.allData[index] = action.payload.data
-        state.data = searchLabelAset(state.allData, state.params?.query || '')
+        state.allData[index] = updated
+      } else {
+        state.allData.push(updated) // kalau belum ada, tambahin
       }
+
+      state.data = searchLabelAset(state.allData, state.params?.query || '')
     })
+
     builder.addCase(deleteData.fulfilled, (state, action) => {
       state.allData = state.allData.filter(item => item.id !== action.payload.id)
       state.data = searchLabelAset(state.allData, state.params?.query || '')
