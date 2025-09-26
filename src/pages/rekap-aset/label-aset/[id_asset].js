@@ -37,60 +37,97 @@ const AssetDetailPage = () => {
   const [editOpen, setEditOpen] = useState(false)
 
   const [editValue, setEditValue] = useState({
-    uuid: '',
+    id_asset: '',
+    label: '',
+    internal_order: '',
     sn: '',
+    lease_type: '',
+    location_type: '',
+    address: '',
+    location_detail: '',
+    owner: '',
     condition: '',
-    location: '',
+    is_active: 0,
     description: '',
     description_label: '',
-    status: ''
+    status_barcode: 0,
+    barcode: ''
   })
-
   const handleEditOpen = row => {
     setEditValue({
       ...row,
-      status: row.status === 'Ok' ? 1 : 0
+      is_active: Number(row.is_active ?? 0),
+      status_barcode: Number(row.status_barcode ?? 0)
     })
+    setErrors({}) // reset error biar popup selalu fresh
     setEditOpen(true)
   }
 
   const dispatch = useDispatch()
 
-  const fetchDetail = async () => {
-    if (!id_asset) return
-    try {
-      setLoading(true)
-
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}asset-label/by-id-asset`, {
-        params: { id_asset }
-      })
-      setData(res.data.data)
-    } catch (error) {
-      console.error('❌ Error fetching detail:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchDetail()
-  }, [id_asset, fetchDetail])
+    if (!id_asset) return
 
-  // handleEditSave setelah update sukses
-  const handleEditSave = async () => {
-    try {
-      const payload = {
-        ...editValue,
-        status: Number(editValue.status)
+    const fetchDetail = async () => {
+      try {
+        setLoading(true)
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}asset-label/by-id-asset`, {
+          params: { id_asset }
+        })
+        setData(res.data.data)
+      } catch (error) {
+        console.error('❌ Error fetching detail:', error)
+      } finally {
+        setLoading(false)
       }
+    }
 
-      await dispatch(updateAsset(payload)).unwrap()
+    fetchDetail()
+  }, [id_asset])
 
-      // ✅ pakai toast
+  const [errors, setErrors] = useState({})
+  const handleEditSave = async () => {
+    const newErrors = {}
+
+    if (!editValue.sn) {
+      newErrors.sn = 'Serial Number wajib diisi'
+    }
+    if (!editValue.description_label) {
+      newErrors.description_label = 'Description Label wajib diisi'
+    }
+
+    // kalau ada error, jangan lanjut
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+
+      return
+    }
+
+    setErrors({}) // reset kalau valid
+
+    try {
+      const blockedFields = ['id_asset', 'label', 'id']
+
+      const mergedPayload = Object.keys(editValue).reduce((acc, key) => {
+        if (blockedFields.includes(key)) return acc
+
+        if (editValue[key] !== undefined) {
+          acc[key] = editValue[key]
+        } else {
+          acc[key] = data?.[key] ?? null
+        }
+
+        return acc
+      }, {})
+
+      mergedPayload.id = editValue.uuid
+
+      await dispatch(updateAsset(mergedPayload)).unwrap()
       toast.success('Asset berhasil diupdate!')
-
       setEditOpen(false)
-      await fetchDetail()
+
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_AMS_URL}asset-label/by-id-asset`, { params: { id_asset } })
+      setData(res.data.data)
     } catch (error) {
       console.error('❌ Gagal update asset:', error)
       toast.error('Gagal mengupdate asset!')
@@ -102,26 +139,17 @@ const AssetDetailPage = () => {
 
   // siapkan data untuk tabel meskipun kosong
   const rows = (data || []).map(item => ({
-    id: item.uuid,
-    id_asset: item.id_asset,
-    label: item.label, // <- tambahin label
-    barcode: item.barcode, // <- tambahin barcode
-    sn: item.sn || '-',
-    condition: item.condition || '-',
-    location: item.location || '-',
-    description: item.description || '-',
-    description_label: item.description_label || '-',
-    status: item.status === 1 || item.status === '1' ? 'Ok' : 'Not Ok'
+    ...item,
+    id: item.uuid, // pakai uuid untuk row id
+    status: item.is_active === 1 ? 'Active' : 'Not Active'
   }))
 
   const columns = [
     { field: 'id_asset', headerName: 'ID Asset', flex: 1 },
-    { field: 'label', headerName: 'Label', flex: 2 }, // tampilkan label juga
+    { field: 'label', headerName: 'Label', flex: 2 },
     { field: 'sn', headerName: 'SN', flex: 1 },
     { field: 'condition', headerName: 'Condition', flex: 1 },
-    { field: 'location', headerName: 'Location', flex: 1 },
-    { field: 'description', headerName: 'Description', flex: 1 },
-    { field: 'description_label', headerName: 'Description Label', flex: 1 },
+    { field: 'location_type', headerName: 'Location', flex: 1 },
     { field: 'status', headerName: 'Status', flex: 1 },
     {
       field: 'actions',
@@ -138,6 +166,26 @@ const AssetDetailPage = () => {
       )
     }
   ]
+
+  // helper untuk render opsi dengan fallback
+  const renderOptions = (options, currentValue) => {
+    return (
+      <>
+        {options.map(opt => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+        {currentValue && !options.includes(currentValue) && <option value={currentValue}>{currentValue}</option>}
+      </>
+    )
+  }
+
+  // Daftar opsi default
+  const conditionOptions = ['baik', 'rusak', 'rusak total', 'hilang', 'tdk ditemukan', 'perlu perbaikan']
+  const leaseTypeOptions = ['murni', 'beli', 'Gudang PN', 'customer', 'mitra', 'pins area', 'not found', 'csr']
+  const locationTypeOptions = ['customer', 'mitra', 'pins', 'pins area', 'Gudang PN', 'not found', 'csr']
+  const ownerOptions = ['pins', 'customer', 'user']
 
   return (
     <Grid container spacing={6}>
@@ -162,56 +210,144 @@ const AssetDetailPage = () => {
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>Edit Asset - {id_asset}</DialogTitle>
         <DialogContent>
+          <CustomTextField fullWidth label='ID Asset' sx={{ mb: 3 }} value={editValue.id_asset} disabled />
+          <CustomTextField fullWidth label='Label' sx={{ mb: 3 }} value={editValue.label} disabled />
           <CustomTextField
             fullWidth
-            label='SN'
+            label='Internal Order'
             sx={{ mb: 3 }}
-            value={editValue.sn}
-            onChange={e => setEditValue({ ...editValue, sn: e.target.value })}
+            value={editValue.internal_order || ''}
+            onChange={e => setEditValue({ ...editValue, internal_order: e.target.value })}
           />
           <CustomTextField
+            fullWidth
+            label='Serial Number'
+            value={editValue.sn || ''}
+            onChange={e => setEditValue({ ...editValue, sn: e.target.value })}
+            error={!!errors.sn}
+            helperText={errors.sn}
+            FormHelperTextProps={{ sx: { fontSize: '0.50rem' } }} // lebih kecil
+          />
+          {/* Lease Type */}
+          <CustomTextField
+            select
+            fullWidth
+            label='Lease Type'
+            sx={{ mb: 3 }}
+            value={editValue.lease_type || ''}
+            onChange={e => setEditValue({ ...editValue, lease_type: e.target.value })}
+            SelectProps={{ native: true }}
+          >
+            {renderOptions(leaseTypeOptions, editValue.lease_type)}
+          </CustomTextField>
+          {/* Location Type */}
+          <CustomTextField
+            select
+            fullWidth
+            label='Location Type'
+            sx={{ mb: 3 }}
+            value={editValue.location_type || ''}
+            onChange={e => setEditValue({ ...editValue, location_type: e.target.value })}
+            SelectProps={{ native: true }}
+          >
+            {renderOptions(locationTypeOptions, editValue.location_type)}
+          </CustomTextField>
+          <CustomTextField
+            fullWidth
+            label='Address'
+            sx={{ mb: 3 }}
+            value={editValue.address || ''}
+            onChange={e => setEditValue({ ...editValue, address: e.target.value })}
+          />
+          <CustomTextField
+            fullWidth
+            label='Location Detail'
+            sx={{ mb: 3 }}
+            value={editValue.location_detail || ''}
+            onChange={e => setEditValue({ ...editValue, location_detail: e.target.value })}
+          />
+          {/* Owner */}
+          <CustomTextField
+            select
+            fullWidth
+            label='Owner'
+            sx={{ mb: 3 }}
+            value={editValue.owner || ''}
+            onChange={e => setEditValue({ ...editValue, owner: e.target.value })}
+            SelectProps={{ native: true }}
+          >
+            {renderOptions(ownerOptions, editValue.owner)}
+          </CustomTextField>
+
+          {/* Condition */}
+          <CustomTextField
+            select
             fullWidth
             label='Condition'
             sx={{ mb: 3 }}
-            value={editValue.condition}
+            value={editValue.condition || ''}
             onChange={e => setEditValue({ ...editValue, condition: e.target.value })}
-          />
+            SelectProps={{ native: true }}
+          >
+            {renderOptions(conditionOptions, editValue.condition)}
+          </CustomTextField>
           <CustomTextField
+            select
             fullWidth
-            label='Location'
+            label='Active Status'
             sx={{ mb: 3 }}
-            value={editValue.location}
-            onChange={e => setEditValue({ ...editValue, location: e.target.value })}
-          />
+            value={editValue.is_active}
+            onChange={e => setEditValue({ ...editValue, is_active: Number(e.target.value) })}
+            SelectProps={{ native: true }}
+          >
+            <option value={1}>Active</option>
+            <option value={0}>Not Active</option>
+          </CustomTextField>
           <CustomTextField
             fullWidth
             label='Description'
             sx={{ mb: 3 }}
-            value={editValue.description}
+            value={editValue.description || ''}
             onChange={e => setEditValue({ ...editValue, description: e.target.value })}
           />
           <CustomTextField
             fullWidth
             label='Description Label'
-            sx={{ mb: 3 }}
-            value={editValue.description_label}
+            value={editValue.description_label || ''}
             onChange={e => setEditValue({ ...editValue, description_label: e.target.value })}
+            error={!!errors.description_label}
+            helperText={errors.description_label}
+            FormHelperTextProps={{ sx: { fontSize: '0.50rem' } }} // lebih kecil
           />
           <CustomTextField
             select
             fullWidth
-            label='Status'
+            label='Status Barcode'
             sx={{ mb: 3 }}
-            value={editValue.status}
-            onChange={e => setEditValue({ ...editValue, status: e.target.value })}
+            value={editValue.status_barcode}
+            onChange={e => setEditValue({ ...editValue, status_barcode: Number(e.target.value) })}
             SelectProps={{ native: true }}
           >
-            <option value={1}>Ok</option>
-            <option value={0}>Not Ok</option>
+            <option value={1}>OK</option>
+            <option value={0}>Not OK</option>
           </CustomTextField>
+          <CustomTextField
+            fullWidth
+            label='Barcode'
+            sx={{ mb: 3 }}
+            value={editValue.barcode || ''}
+            onChange={e => setEditValue({ ...editValue, barcode: e.target.value })}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Batal</Button>
+          <Button
+            onClick={() => {
+              setErrors({}) // reset error
+              setEditOpen(false)
+            }}
+          >
+            Batal
+          </Button>
           <Button variant='contained' onClick={handleEditSave}>
             Simpan
           </Button>

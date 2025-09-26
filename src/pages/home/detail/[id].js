@@ -35,8 +35,6 @@ const PlanDetail = () => {
   const asetMasuk = useSelector(state => state.asetMasuk?.data || [])
   const itemDoIn = useSelector(state => state.itemDoin?.allData || [])
 
-  console.log('Data plan: ', plans)
-
   const [openDialog, setOpenDialog] = useState(false)
   const [dialogType, setDialogType] = useState('in')
   const [selectedPO, setSelectedPO] = useState(null)
