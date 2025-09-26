@@ -103,6 +103,11 @@ const navigation = () => {
           title: 'Company',
           path: '/pengaturan/company',
           auth: false
+        },
+        {
+          title: 'Warehouse',
+          path: '/pengaturan/warehouse',
+          auth: false
         }
       ],
       auth: false,

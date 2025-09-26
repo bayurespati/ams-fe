@@ -63,7 +63,7 @@ const AuthProvider = ({ children }) => {
     }
 
     initAuth()
-  }, []) // <-- tambahkan []
+  }, []) // ✅ Tambahkan [] agar hanya dijalankan sekali saat mount
 
   // ? Login
   const handleLogin = async (params, errorCallback) => {
