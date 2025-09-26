@@ -44,7 +44,7 @@ const AuthProvider = ({ children }) => {
           setUser(userData)
           localStorage.setItem('userData', JSON.stringify(userData))
         } catch (err) {
-          console.error('? Gagal ambil detail user:', err)
+          console.error('❌ Gagal ambil detail user:', err)
           localStorage.clear()
           setUser(null)
           if (!router.pathname.includes('/login')) router.replace('/login')

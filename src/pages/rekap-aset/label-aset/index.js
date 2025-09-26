@@ -43,18 +43,17 @@ const defaultColumns = [
     headerName: 'ID Asset',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.id_asset}</Typography>
   },
-
   {
     flex: 0.2,
-    field: 'total',
-    headerName: 'Total',
-    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.total}</Typography>
+    field: 'quantity',
+    headerName: 'Quantity',
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.quantity}</Typography>
   },
   {
     flex: 0.2,
-    field: 'barcode_count',
-    headerName: 'Barcode Count',
-    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.barcode_count}</Typography>
+    field: 'asset_labels_count',
+    headerName: 'Verifikasi',
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.asset_labels_count}</Typography>
   }
 ]
 
@@ -70,10 +69,16 @@ const LabelAsetTable = () => {
   const [formValue, setFormValue] = useState({
     internal_order: '',
     id_asset: '',
-    total: '',
-    barcode_count: '',
+    quantity: '',
+    asset_labels_count: '',
     description_label: ''
   })
+
+  // State untuk upload dialog
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadFile, setUploadFile] = useState(null)
+  const [selectedAsset, setSelectedAsset] = useState(null)
+  const [uploadLoading, setUploadLoading] = useState(false)
 
   useEffect(() => {
     dispatch(fetchData())
@@ -92,7 +97,7 @@ const LabelAsetTable = () => {
   }, [])
 
   const handleDialogToggle = () => {
-    setFormValue({ internal_order: '', id_asset: '', total: '', barcode_count: '' })
+    setFormValue({ internal_order: '', id_asset: '', quantity: '', asset_labels_count: '' })
     setDialogOpen(true)
   }
 
@@ -114,35 +119,69 @@ const LabelAsetTable = () => {
     router.push(`/rekap-aset/label-aset/${row.id_asset}`)
   }
 
-  const handleDownloadBarcode = async (id_asset, total, barcode_count) => {
-    try {
-      // kalau barcode_count masih 0, hentikan aja
-      if (barcode_count === 0) {
-        alert('Belum ada barcode yang bisa di-download')
+  // Handler untuk membuka dialog upload
+  const handleOpenUploadDialog = row => {
+    setSelectedAsset(row.id_asset)
+    setUploadFile(null)
+    setUploadLoading(false) // Reset loading state
+    setUploadDialogOpen(true)
+  }
 
-        return
+  // State untuk error message upload
+  const [uploadErrorMessage, setUploadErrorMessage] = useState('')
+
+  // Handler untuk submit upload file
+  const handleUploadSubmit = async e => {
+    e.preventDefault()
+
+    if (!uploadFile) {
+      setUploadErrorMessage('Pilih file Excel terlebih dahulu!')
+
+      return
+    }
+
+    if (!selectedAsset) {
+      setUploadErrorMessage('ID Asset tidak ditemukan!')
+
+      return
+    }
+
+    setUploadLoading(true)
+    setUploadErrorMessage('') // reset error dulu
+
+    try {
+      const formData = new FormData()
+      formData.append('id_asset', selectedAsset)
+      formData.append('file', uploadFile)
+
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_AMS_URL}asset-label/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('File Excel berhasil diupload!')
+
+        // Reset form dan tutup dialog
+        setUploadFile(null)
+        setSelectedAsset(null)
+        setUploadDialogOpen(false)
+        dispatch(fetchData())
+      } else {
+        setUploadErrorMessage(response.data?.message || 'Upload gagal!')
+        setUploadLoading(false) // 🚀 reset loading kalau gagal
+      }
+    } catch (error) {
+      console.error('❌ Gagal upload file:', error)
+
+      const backendMessage = error.response?.data?.message || ''
+
+      if (backendMessage.toLowerCase().includes('quantity not match')) {
+        setUploadErrorMessage('Jumlah baris pada file Excel melebihi kuantitas yang ditentukan.')
+      } else {
+        setUploadErrorMessage('Gagal mengupload file Excel!')
       }
 
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_AMS_URL}asset-label/download`,
-        { id_asset, qty: barcode_count }, // kirim sesuai jumlah barcode yang sudah ada
-        { responseType: 'blob' }
-      )
-
-      const file = new Blob([res.data], { type: 'application/pdf' })
-      const url = window.URL.createObjectURL(file)
-
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `barcode-${id_asset}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('❌ Gagal download barcode:', error)
-      alert('Download barcode gagal')
+      setUploadLoading(false) // 🚀 reset loading walau gagal
     }
   }
 
@@ -162,14 +201,11 @@ const LabelAsetTable = () => {
             </IconButton>
           </Tooltip>
 
-          {/* Hanya tampilkan tombol download kalau barcode_count > 0 */}
-          {row.barcode_count > 0 && (
-            <Tooltip arrow title='Download Barcode'>
-              <IconButton onClick={() => handleDownloadBarcode(row.id_asset, row.total, row.barcode_count)}>
-                <Icon icon='tabler:download' />
-              </IconButton>
-            </Tooltip>
-          )}
+          <Tooltip arrow title='Upload Excel'>
+            <IconButton onClick={() => handleOpenUploadDialog(row)}>
+              <Icon icon='tabler:upload' />
+            </IconButton>
+          </Tooltip>
         </Box>
       )
     }
@@ -254,15 +290,67 @@ const LabelAsetTable = () => {
             <CustomTextField
               fullWidth
               sx={{ mb: 4 }}
-              label='Total'
-              value={formValue.total}
-              onChange={e => setFormValue({ ...formValue, total: e.target.value })}
+              label='Quantity'
+              value={formValue.quantity}
+              onChange={e => setFormValue({ ...formValue, quantity: e.target.value })}
             />
 
             <DialogActions>
               <Button onClick={() => setDialogOpen(false)}>Batal</Button>
               <Button type='submit' variant='contained'>
                 Simpan
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Upload Excel */}
+      <Dialog
+        maxWidth='sm'
+        fullWidth
+        open={uploadDialogOpen}
+        onClose={() => {
+          if (!uploadLoading) {
+            setUploadDialogOpen(false)
+            setUploadFile(null)
+            setSelectedAsset(null)
+          }
+        }}
+        disableEscapeKeyDown={uploadLoading}
+      >
+        <DialogTitle>Upload Excel untuk ID Asset: {selectedAsset}</DialogTitle>
+        <DialogContent>
+          <Box component='form' onSubmit={handleUploadSubmit}>
+            <CustomTextField
+              type='file'
+              fullWidth
+              label='Pilih File Excel'
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ accept: '.xlsx, .xls' }}
+              onChange={e => setUploadFile(e.target.files[0])}
+              sx={{ mb: 2 }}
+              disabled={uploadLoading}
+            />
+
+            {/* Error message di bawah input */}
+            {uploadErrorMessage && (
+              <Typography sx={{ color: 'red', fontSize: '0.875rem', mb: 2 }}>{uploadErrorMessage}</Typography>
+            )}
+
+            <DialogActions>
+              <Button
+                onClick={() => {
+                  setUploadDialogOpen(false)
+                  setUploadFile(null)
+                  setSelectedAsset(null)
+                }}
+                disabled={uploadLoading}
+              >
+                Batal
+              </Button>
+              <Button type='submit' variant='contained' disabled={uploadLoading || !uploadFile}>
+                {uploadLoading ? 'Mengupload...' : 'Upload'}
               </Button>
             </DialogActions>
           </Box>

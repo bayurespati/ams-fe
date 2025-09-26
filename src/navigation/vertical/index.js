@@ -62,11 +62,6 @@ const navigation = () => {
       children: [
         {
           title: 'List Aset',
-          path: '/rekap-aset/list-aset',
-          auth: false
-        },
-        {
-          title: 'Label Aset',
           path: '/rekap-aset/label-aset',
           auth: false
         }
