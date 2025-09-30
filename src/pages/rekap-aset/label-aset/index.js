@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import { DataGrid } from '@mui/x-data-grid'
+import TextField from '@mui/material/TextField'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -63,7 +64,7 @@ const LabelAsetTable = () => {
   const router = useRouter()
 
   const [idAssetOptions, setIdAssetOptions] = useState([])
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 50 }) // default 50 rows
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const [formValue, setFormValue] = useState({
@@ -73,6 +74,9 @@ const LabelAsetTable = () => {
     asset_labels_count: '',
     description_label: ''
   })
+
+  // 🔍 Search state
+  const [searchTerm, setSearchTerm] = useState('')
 
   // State untuk upload dialog
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
@@ -103,7 +107,6 @@ const LabelAsetTable = () => {
 
   const handleSubmit = async e => {
     e.preventDefault()
-
     try {
       await dispatch(addData(formValue)).unwrap()
       dispatch(fetchData())
@@ -119,35 +122,30 @@ const LabelAsetTable = () => {
     router.push(`/rekap-aset/label-aset/${row.id_asset}`)
   }
 
-  // Handler untuk membuka dialog upload
   const handleOpenUploadDialog = row => {
     setSelectedAsset(row.id_asset)
     setUploadFile(null)
-    setUploadLoading(false) // Reset loading state
+    setUploadLoading(false)
     setUploadDialogOpen(true)
   }
 
-  // State untuk error message upload
   const [uploadErrorMessage, setUploadErrorMessage] = useState('')
 
-  // Handler untuk submit upload file
   const handleUploadSubmit = async e => {
     e.preventDefault()
 
     if (!uploadFile) {
       setUploadErrorMessage('Pilih file Excel terlebih dahulu!')
-
       return
     }
 
     if (!selectedAsset) {
       setUploadErrorMessage('ID Asset tidak ditemukan!')
-
       return
     }
 
     setUploadLoading(true)
-    setUploadErrorMessage('') // reset error dulu
+    setUploadErrorMessage('')
 
     try {
       const formData = new FormData()
@@ -160,28 +158,23 @@ const LabelAsetTable = () => {
 
       if (response.status === 200 || response.status === 201) {
         toast.success('File Excel berhasil diupload!')
-
-        // Reset form dan tutup dialog
         setUploadFile(null)
         setSelectedAsset(null)
         setUploadDialogOpen(false)
         dispatch(fetchData())
       } else {
         setUploadErrorMessage(response.data?.message || 'Upload gagal!')
-        setUploadLoading(false) // 🚀 reset loading kalau gagal
+        setUploadLoading(false)
       }
     } catch (error) {
       console.error('❌ Gagal upload file:', error)
-
       const backendMessage = error.response?.data?.message || ''
-
       if (backendMessage.toLowerCase().includes('quantity not match')) {
         setUploadErrorMessage('Jumlah baris pada file Excel melebihi kuantitas yang ditentukan.')
       } else {
         setUploadErrorMessage('Gagal mengupload file Excel!')
       }
-
-      setUploadLoading(false) // 🚀 reset loading walau gagal
+      setUploadLoading(false)
     }
   }
 
@@ -200,7 +193,6 @@ const LabelAsetTable = () => {
               <Icon icon='tabler:info-circle' />
             </IconButton>
           </Tooltip>
-
           <Tooltip arrow title='Upload Excel'>
             <IconButton onClick={() => handleOpenUploadDialog(row)}>
               <Icon icon='tabler:upload' />
@@ -211,6 +203,11 @@ const LabelAsetTable = () => {
     }
   ]
 
+  // 🔍 Filter data berdasarkan search
+  const filteredRows = store.data.filter(row =>
+    Object.values(row).some(val => val?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+
   return (
     <>
       <Grid container spacing={6}>
@@ -219,21 +216,37 @@ const LabelAsetTable = () => {
             <CardHeader
               title='Daftar Label Aset'
               action={
-                <Button variant='contained' onClick={handleDialogToggle}>
-                  Tambah Label Aset
-                </Button>
+                <Box sx={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  {/* 🔍 Search bar */}
+                  <TextField
+                    size='small'
+                    placeholder='Cari data...'
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    sx={{ minWidth: 300 }} // lebih panjang
+                  />
+
+                  <Button
+                    variant='contained'
+                    onClick={handleDialogToggle}
+                    sx={{ px: 2, py: 2.5 }} // lebih ramping daripada default
+                  >
+                    Tambah Label Aset
+                  </Button>
+                </Box>
               }
             />
+
             <CardContent>
               <Box>
                 <DataGrid
                   autoHeight
-                  rows={store.data}
+                  rows={filteredRows}
                   columns={columns}
                   disableRowSelectionOnClick
-                  pageSizeOptions={[10, 25, 50]}
-                  paginationModel={paginationModel}
+                  pageSize={50}
                   onPaginationModelChange={setPaginationModel}
+                  pageSizeOptions={[25, 50]}
                   getRowId={row => row.id_asset}
                   sx={{
                     backgroundColor: '#fff',
