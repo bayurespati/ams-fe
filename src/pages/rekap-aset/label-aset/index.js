@@ -55,6 +55,12 @@ const defaultColumns = [
     field: 'asset_labels_count',
     headerName: 'Verifikasi',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.asset_labels_count}</Typography>
+  },
+  {
+    flex: 0.2,
+    field: 'barcode_count',
+    headerName: 'Barcode Count',
+    renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.barcode_count ?? '-'}</Typography>
   }
 ]
 
@@ -178,6 +184,36 @@ const LabelAsetTable = () => {
     }
   }
 
+  const handleDownloadBarcode = async (id_asset, quantity, barcode_count) => {
+    try {
+      if (barcode_count === 0) {
+        alert('Belum ada barcode yang bisa di-download')
+        return
+      }
+
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_AMS_URL}asset-label/downloads`,
+        { id_asset, qty: barcode_count },
+        { responseType: 'blob' }
+      )
+
+      const file = new Blob([res.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(file)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `barcode-${id_asset}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('❌ Gagal download barcode:', error)
+      alert('Download barcode gagal')
+    }
+  }
+
   const columns = [
     ...defaultColumns,
     {
@@ -198,6 +234,15 @@ const LabelAsetTable = () => {
               <Icon icon='tabler:upload' />
             </IconButton>
           </Tooltip>
+          {row.barcode_count > 0 && (
+            <Tooltip arrow title='Download Barcode PDF'>
+              <IconButton
+                onClick={() => handleDownloadBarcode(row.id_asset, row.asset_labels_count, row.barcode_count)}
+              >
+                <Icon icon='tabler:download' />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       )
     }

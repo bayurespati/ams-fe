@@ -182,10 +182,10 @@ const AssetDetailPage = () => {
   }
 
   // Daftar opsi default
-  const conditionOptions = ['baik', 'rusak', 'rusak total', 'hilang', 'tdk ditemukan', 'perlu perbaikan']
-  const leaseTypeOptions = ['murni', 'beli', 'Gudang PN', 'customer', 'mitra', 'pins area', 'not found', 'csr']
-  const locationTypeOptions = ['customer', 'mitra', 'pins', 'pins area', 'Gudang PN', 'not found', 'csr']
-  const ownerOptions = ['pins', 'customer', 'user']
+  const conditionOptions = ['Baik', 'Rusak', 'Rusak total', 'Hilang', 'Tidak ditemukan', 'Perlu perbaikan']
+  const leaseTypeOptions = ['Murni', 'Sewa']
+  const locationTypeOptions = ['Customer', 'Mitra', 'PINS', 'PINS area', 'Gudang PN', 'Not found', 'CSR']
+  const ownerOptions = ['PINS', 'Customer', 'User']
 
   return (
     <Grid container spacing={6}>
@@ -209,16 +209,24 @@ const AssetDetailPage = () => {
       {/* Dialog Edit */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>Edit Asset - {id_asset}</DialogTitle>
-        <DialogContent>
-          <CustomTextField fullWidth label='ID Asset' sx={{ mb: 3 }} value={editValue.id_asset} disabled />
-          <CustomTextField fullWidth label='Label' sx={{ mb: 3 }} value={editValue.label} disabled />
+        <DialogContent
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3, // ✅ beri jarak antar input secara konsisten
+            mt: 1
+          }}
+        >
+          <CustomTextField fullWidth label='ID Asset' value={editValue.id_asset} disabled />
+          <CustomTextField fullWidth label='Label' value={editValue.label} disabled />
+
           <CustomTextField
             fullWidth
             label='Internal Order'
-            sx={{ mb: 3 }}
             value={editValue.internal_order || ''}
             onChange={e => setEditValue({ ...editValue, internal_order: e.target.value })}
           />
+
           <CustomTextField
             fullWidth
             label='Serial Number'
@@ -226,52 +234,49 @@ const AssetDetailPage = () => {
             onChange={e => setEditValue({ ...editValue, sn: e.target.value })}
             error={!!errors.sn}
             helperText={errors.sn}
-            FormHelperTextProps={{ sx: { fontSize: '0.50rem' } }} // lebih kecil
+            FormHelperTextProps={{ sx: { fontSize: '0.75rem' } }}
           />
-          {/* Lease Type */}
+
           <CustomTextField
             select
             fullWidth
             label='Lease Type'
-            sx={{ mb: 3 }}
             value={editValue.lease_type || ''}
             onChange={e => setEditValue({ ...editValue, lease_type: e.target.value })}
             SelectProps={{ native: true }}
           >
             {renderOptions(leaseTypeOptions, editValue.lease_type)}
           </CustomTextField>
-          {/* Location Type */}
+
           <CustomTextField
             select
             fullWidth
             label='Location Type'
-            sx={{ mb: 3 }}
             value={editValue.location_type || ''}
             onChange={e => setEditValue({ ...editValue, location_type: e.target.value })}
             SelectProps={{ native: true }}
           >
             {renderOptions(locationTypeOptions, editValue.location_type)}
           </CustomTextField>
+
           <CustomTextField
             fullWidth
             label='Address'
-            sx={{ mb: 3 }}
             value={editValue.address || ''}
             onChange={e => setEditValue({ ...editValue, address: e.target.value })}
           />
+
           <CustomTextField
             fullWidth
             label='Location Detail'
-            sx={{ mb: 3 }}
             value={editValue.location_detail || ''}
             onChange={e => setEditValue({ ...editValue, location_detail: e.target.value })}
           />
-          {/* Owner */}
+
           <CustomTextField
             select
             fullWidth
             label='Owner'
-            sx={{ mb: 3 }}
             value={editValue.owner || ''}
             onChange={e => setEditValue({ ...editValue, owner: e.target.value })}
             SelectProps={{ native: true }}
@@ -279,23 +284,21 @@ const AssetDetailPage = () => {
             {renderOptions(ownerOptions, editValue.owner)}
           </CustomTextField>
 
-          {/* Condition */}
           <CustomTextField
             select
             fullWidth
             label='Condition'
-            sx={{ mb: 3 }}
             value={editValue.condition || ''}
             onChange={e => setEditValue({ ...editValue, condition: e.target.value })}
             SelectProps={{ native: true }}
           >
             {renderOptions(conditionOptions, editValue.condition)}
           </CustomTextField>
+
           <CustomTextField
             select
             fullWidth
             label='Active Status'
-            sx={{ mb: 3 }}
             value={editValue.is_active}
             onChange={e => setEditValue({ ...editValue, is_active: Number(e.target.value) })}
             SelectProps={{ native: true }}
@@ -303,13 +306,14 @@ const AssetDetailPage = () => {
             <option value={1}>Active</option>
             <option value={0}>Not Active</option>
           </CustomTextField>
+
           <CustomTextField
             fullWidth
             label='Description'
-            sx={{ mb: 3 }}
             value={editValue.description || ''}
             onChange={e => setEditValue({ ...editValue, description: e.target.value })}
           />
+
           <CustomTextField
             fullWidth
             label='Description Label'
@@ -317,13 +321,13 @@ const AssetDetailPage = () => {
             onChange={e => setEditValue({ ...editValue, description_label: e.target.value })}
             error={!!errors.description_label}
             helperText={errors.description_label}
-            FormHelperTextProps={{ sx: { fontSize: '0.50rem' } }} // lebih kecil
+            FormHelperTextProps={{ sx: { fontSize: '0.75rem' } }}
           />
+
           <CustomTextField
             select
             fullWidth
             label='Status Barcode'
-            sx={{ mb: 3 }}
             value={editValue.status_barcode}
             onChange={e => setEditValue({ ...editValue, status_barcode: Number(e.target.value) })}
             SelectProps={{ native: true }}
@@ -331,14 +335,15 @@ const AssetDetailPage = () => {
             <option value={1}>OK</option>
             <option value={0}>Not OK</option>
           </CustomTextField>
+
           <CustomTextField
             fullWidth
             label='Barcode'
-            sx={{ mb: 3 }}
             value={editValue.barcode || ''}
             onChange={e => setEditValue({ ...editValue, barcode: e.target.value })}
           />
         </DialogContent>
+
         <DialogActions>
           <Button
             onClick={() => {
