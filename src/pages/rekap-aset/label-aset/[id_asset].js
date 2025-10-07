@@ -335,13 +335,6 @@ const AssetDetailPage = () => {
             <option value={1}>OK</option>
             <option value={0}>Not OK</option>
           </CustomTextField>
-
-          <CustomTextField
-            fullWidth
-            label='Barcode'
-            value={editValue.barcode || ''}
-            onChange={e => setEditValue({ ...editValue, barcode: e.target.value })}
-          />
         </DialogContent>
 
         <DialogActions>
