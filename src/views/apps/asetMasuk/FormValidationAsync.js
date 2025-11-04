@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ** MUI Imports
 import Card from '@mui/material/Card'
@@ -11,13 +11,13 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
 import InputFileUploadBtn from 'src/views/components/InputFileUploadBtn'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect } from 'react'
-import { addData } from 'src/store/apps/aset-masuk'
+import { addData, fetchData } from 'src/store/apps/aset-masuk'
 import { fetchData as fetchDataPO } from 'src/store/apps/purchase-order'
 import { useTheme } from '@mui/material'
 import Icon from 'src/@core/components/icon'
+import Box from '@mui/material/Box'
 
-// ** Custom Component Import
+// ** Custom Components
 import CustomTextField from 'src/@core/components/mui/text-field'
 import CustomAutocomplete from 'src/@core/components/mui/autocomplete'
 import PickersCustomization from 'src/views/components/PickersCustomization'
@@ -27,43 +27,34 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import toast from 'react-hot-toast'
 import { useForm, Controller } from 'react-hook-form'
 import { format } from 'date-fns'
-import { set } from 'nprogress'
 
 const defaultValues = {
   po_id: '',
   no_do: '',
   lokasi_gudang: '',
   owner_id: '',
+  penerima: '',
   keterangan: '',
   no_gr: '',
   tanggal_masuk: ''
 }
 
-import { fetchData } from 'src/store/apps/aset-masuk'
-
-const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetail }) => {
-  // ** States
+const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView }) => {
   const [loading, setLoading] = useState(false)
   const [fileEvidence, setFileEvidence] = useState([])
+  const [fileFotoTerima, setFileFotoTerima] = useState([]) // ✅ FOTO TERIMA BARANG
   const [value, setValue] = useState('')
+
   const data_po = useSelector(state => state.purchaseOrder.data)
-  const data_doIn = useSelector(state => state.asetMasuk.data)
+  const dispatch = useDispatch()
 
   const theme = useTheme()
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
 
-  const dispatch = useDispatch()
-
-  let formData = new FormData()
-
-  // ** Hook
+  // Fetch data PO
   useEffect(() => {
-    dispatch(
-      fetchDataPO({
-        q: value
-      })
-    )
+    dispatch(fetchDataPO({ q: value }))
   }, [dispatch, value])
 
   const {
@@ -76,34 +67,31 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
     setLoading(true)
 
     try {
-      // Format tanggal masuk
       if (data.tanggal_masuk) {
         data.tanggal_masuk = format(new Date(data.tanggal_masuk), 'yyyy-MM-dd')
       }
 
-      // Bangun FormData
       const formData = new FormData()
-
-      // Tambahkan semua field form ke FormData (kecuali file_evidence)
       for (const key in data) {
-        if (key !== 'file_evidence') {
+        if (key !== 'file_evidence' && key !== 'file_foto_terima') {
           formData.append(key, data[key])
         }
       }
 
-      // Tambahkan file evidence ke FormData jika ada
+      // ✅ Tambahkan file evidence
       if (fileEvidence.length > 0) {
         formData.append('file_evidence', fileEvidence[0])
       }
 
-      // Kirim ke backend
-      const response = await dispatch(addData(formData)).unwrap()
+      // ✅ Tambahkan foto terima barang — pakai nama "file_foto_terima"
+      if (fileFotoTerima.length > 0) {
+        formData.append('file_foto_terima', fileFotoTerima[0])
+      }
+
+      await dispatch(addData(formData)).unwrap()
       toast.success('Form berhasil ditambahkan!')
 
-      // Refresh data tabel
       dispatch(fetchData({ q: '' }))
-
-      // Redirect ke halaman daftar DO In
       setView('1')
     } catch (error) {
       toast.error('Gagal menambahkan data!')
@@ -123,11 +111,13 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
       >
         Back
       </Button>
+
       <Card>
         <CardHeader title='DO In Baru' />
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={6}>
+              {/* PO ID */}
               <Grid item xs={12}>
                 <Controller
                   name='po_id'
@@ -136,17 +126,17 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                   render={({ field: { value, onChange } }) => (
                     <CustomAutocomplete
                       fullWidth
-                      color={'secondary'}
+                      color='secondary'
                       options={data_po}
                       id='po_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya id
+                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')}
                       getOptionLabel={option => option.nama_pekerjaan || ''}
-                      value={data_po.find(option => option.id === value) || null} // Temukan objek berdasarkan title
+                      value={data_po.find(option => option.id === value) || null}
                       renderInput={params => (
                         <CustomTextField
-                          placeholder='po laptop'
                           {...params}
-                          label='PO id'
+                          label='PO ID'
+                          placeholder='PO Laptop'
                           error={Boolean(errors.po_id)}
                           {...(errors.po_id && { helperText: 'This field is required' })}
                         />
@@ -155,6 +145,8 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                   )}
                 />
               </Grid>
+
+              {/* No DO */}
               <Grid item xs={12}>
                 <Controller
                   name='no_do'
@@ -166,14 +158,15 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                       value={value}
                       label='No DO'
                       onChange={onChange}
-                      placeholder='do123'
+                      placeholder='DO123'
                       error={Boolean(errors.no_do)}
-                      aria-describedby='validation-async-nama-aset'
                       {...(errors.no_do && { helperText: 'This field is required' })}
                     />
                   )}
                 />
               </Grid>
+
+              {/* Lokasi Gudang */}
               <Grid item xs={6}>
                 <Controller
                   name='lokasi_gudang'
@@ -182,17 +175,17 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                   render={({ field: { value, onChange } }) => (
                     <CustomAutocomplete
                       fullWidth
-                      color={'secondary'}
+                      color='secondary'
                       options={data_lokasi_gudang}
                       id='lokasi_gudang'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.lokasi : '')} // Simpan hanya id
+                      onChange={(event, newValue) => onChange(newValue ? newValue.lokasi : '')}
                       getOptionLabel={option => option.lokasi || ''}
-                      value={data_lokasi_gudang.find(option => option.lokasi === value) || null} // Temukan objek berdasarkan id
+                      value={data_lokasi_gudang.find(option => option.lokasi === value) || null}
                       renderInput={params => (
                         <CustomTextField
-                          placeholder='Jakarta Pusat'
                           {...params}
                           label='Lokasi Gudang'
+                          placeholder='Jakarta Pusat'
                           error={Boolean(errors.lokasi_gudang)}
                           {...(errors.lokasi_gudang && { helperText: 'This field is required' })}
                         />
@@ -202,6 +195,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                 />
               </Grid>
 
+              {/* Tanggal Masuk */}
               <Grid item xs={6}>
                 <DatePickerWrapper>
                   <Controller
@@ -222,34 +216,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                 </DatePickerWrapper>
               </Grid>
 
-              <Grid item xs={12}>
-                <Controller
-                  name='owner_id'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange } }) => (
-                    <CustomAutocomplete
-                      fullWidth
-                      color={'secondary'}
-                      options={data_owner}
-                      id='owner_id'
-                      onChange={(event, newValue) => onChange(newValue ? newValue.id : '')} // Simpan hanya id
-                      getOptionLabel={option => option.nama || ''}
-                      value={data_owner.find(option => option.id === value) || null} // Temukan objek berdasarkan nama
-                      renderInput={params => (
-                        <CustomTextField
-                          placeholder='615'
-                          {...params}
-                          label='Pemilik'
-                          error={Boolean(errors.owner_id)}
-                          {...(errors.owner_id && { helperText: 'This field is required' })}
-                        />
-                      )}
-                    />
-                  )}
-                />
-              </Grid>
-
+              {/* Penerima */}
               <Grid item xs={12}>
                 <Controller
                   name='penerima'
@@ -263,13 +230,13 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                       onChange={onChange}
                       placeholder='Nama penerima barang'
                       error={Boolean(errors.penerima)}
-                      aria-describedby='validation-async-penerima'
                       {...(errors.penerima && { helperText: 'This field is required' })}
                     />
                   )}
                 />
               </Grid>
 
+              {/* Keterangan */}
               <Grid item xs={12}>
                 <Controller
                   name='keterangan'
@@ -278,55 +245,70 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                   render={({ field: { value, onChange } }) => (
                     <CustomTextField
                       fullWidth
-                      rows={4}
                       multiline
+                      rows={4}
                       value={value}
                       label='Keterangan'
                       onChange={onChange}
-                      placeholder='12'
+                      placeholder='Catatan tambahan...'
                       error={Boolean(errors.keterangan)}
-                      aria-describedby='validation-async-keterangan'
                       {...(errors.keterangan && { helperText: 'This field is required' })}
                     />
                   )}
                 />
               </Grid>
 
+              {/* No GR */}
               <Grid item xs={6}>
                 <Controller
                   name='no_gr'
                   control={control}
-                  rules={{ required: false }}
                   render={({ field: { value, onChange } }) => (
                     <CustomTextField
                       fullWidth
                       value={value}
-                      label='No. Goods Receipt'
+                      label='No. Goods Receipt (Optional)'
                       onChange={onChange}
-                      placeholder='12'
-                      error={Boolean(errors.no_gr)}
-                      aria-describedby='validation-async-no-gr'
-                      {...(errors.no_gr && { helperText: 'This field is required' })}
+                      placeholder='GR123'
                     />
                   )}
                 />
               </Grid>
-              <Grid item xs={6}>
-                <Typography variant='body2' component='span' sx={{ mb: 2 }}>
-                  {' '}
-                  Upload File Evidence{' '}
-                </Typography>
-                <InputFileUploadBtn
-                  files={fileEvidence}
-                  setFiles={setFileEvidence}
-                  accept='.pdf,.jpg,.jpeg,.png,.gif' // ✅ batasi tipe file
-                  maxSizeMB={2} // (opsional) jika ingin tetap limit 2MB
-                />
+
+              {/* Upload File Evidence & Foto Terima Barang */}
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    pl: 0,
+                    ml: 0, // ✅ geser semua konten lebih kiri (atur sesuai tampilan, -1 atau -2 biasanya pas)
+                    gap: 0 // jarak antar dua box
+                  }}
+                >
+                  {/* Upload File Evidence */}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant='body2' sx={{ mb: 1 }}>
+                      Upload File Evidence
+                    </Typography>
+                    <InputFileUploadBtn files={fileEvidence} setFiles={setFileEvidence} accept='.pdf,.jpg,.jpeg,.png' />
+                  </Box>
+
+                  {/* Upload Foto Terima Barang */}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant='body2' sx={{ mb: 1 }}>
+                      Upload Foto Terima Barang
+                    </Typography>
+                    <InputFileUploadBtn files={fileFotoTerima} setFiles={setFileFotoTerima} accept='.jpg,.jpeg,.png' />
+                  </Box>
+                </Box>
               </Grid>
 
               <Grid item xs={12}>
                 <Button type='submit' variant='contained'>
-                  {loading ? (
+                  {loading && (
                     <CircularProgress
                       sx={{
                         color: 'common.white',
@@ -335,7 +317,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView, setDetai
                         mr: theme => theme.spacing(2)
                       }}
                     />
-                  ) : null}
+                  )}
                   Submit
                 </Button>
               </Grid>

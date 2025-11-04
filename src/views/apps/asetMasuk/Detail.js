@@ -41,12 +41,17 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 
+import Autocomplete from '@mui/material/Autocomplete'
+import { fetchCompany } from 'src/store/apps/company'
+
 const Detail = ({ id, setView }) => {
   // ** States
   const [loading, setLoading] = useState(false)
   const [fileSerialNumber, setFileSerialNumber] = useState([])
   const [value, setValue] = useState('')
   const [tabValue, setTabValue] = useState('1')
+  const [nextId, setNextId] = useState(1)
+  const companies = useSelector(state => state.company.data)
 
   const handleChangeTab = (event, newValue) => {
     setTabValue(newValue)
@@ -74,6 +79,7 @@ const Detail = ({ id, setView }) => {
   useEffect(() => {
     dispatch(fetchAllItem({ q: id }))
     fetchSingleDetail(id)
+    dispatch(fetchCompany({ q: '' }))
   }, [dispatch, id])
 
   useEffect(() => {
@@ -82,13 +88,9 @@ const Detail = ({ id, setView }) => {
     }
   }, [filteredItems, data.po])
 
+  // Ganti handleItemChange
   const handleItemChange = (index, field, value) => {
-    const newItems = [...items]
-    const itemIndex = newItems.findIndex(item => item.index === index)
-    if (itemIndex !== -1) {
-      newItems[itemIndex] = { ...newItems[itemIndex], [field]: value }
-      setItems(newItems)
-    }
+    setItems(prev => prev.map(item => (item.index === index ? { ...item, [field]: value } : item)))
   }
 
   const [showPreview, setShowPreview] = useState(false)
@@ -107,43 +109,32 @@ const Detail = ({ id, setView }) => {
       const payload = {
         do_in_id: id,
         items: validItems.map(item => ({
+          nama_barang: item.nama_barang,
           sn: item.sn,
-          jumlah: Number(item.jumlah_barang || 1)
+          jumlah: Number(item.jumlah_barang || 1),
+          owner_id: item.owner?.id || null
+          // pastikan item.owner adalah object {name, uuid}
         }))
       }
 
       if (!payload.items || payload.items.length === 0) {
         toast.error('Tidak ada item yang valid untuk disubmit')
-
         return
       }
 
-      // Dispatch tanpa unwrap - biarkan Redux handle error internally
       const result = await dispatch(addData(payload))
 
-      // Cek hasil berdasarkan result.type yang lebih reliable
       if (result.type.endsWith('/fulfilled')) {
-        // SUCCESS - Data berhasil masuk
         toast.success('Items berhasil disubmit!')
-
-        // Refresh data
         dispatch(fetchAllItem({ q: id }))
-        if (data?.po?.plan_id) {
-          fetchSinglePlan(data?.po?.plan_id)
-        }
+        if (data?.po?.plan_id) fetchSinglePlan(data?.po?.plan_id)
       } else {
-        // Jika ada payload dengan message success, anggap berhasil
         if (result.payload?.message && result.payload.message.toLowerCase().includes('berhasil')) {
           toast.success(result.payload.message)
           dispatch(fetchAllItem({ q: id }))
-          if (data?.po?.plan_id) {
-            fetchSinglePlan(data?.po?.plan_id)
-          }
+          if (data?.po?.plan_id) fetchSinglePlan(data?.po?.plan_id)
         } else {
-          // Coba refresh data dulu untuk cek apakah data benar-benar masuk
           await dispatch(fetchAllItem({ q: id }))
-
-          // Jika setelah refresh ada perubahan data, anggap berhasil
           setTimeout(() => {
             toast.success('Items berhasil disubmit!')
           }, 500)
@@ -151,11 +142,7 @@ const Detail = ({ id, setView }) => {
       }
     } catch (error) {
       console.error('Submit error:', error)
-
-      // Bahkan jika error, coba refresh data untuk cek
       dispatch(fetchAllItem({ q: id }))
-
-      // Tunggu sebentar lalu cek apakah data benar-benar masuk
       setTimeout(() => {
         toast.success('Items berhasil disubmit!')
       }, 1000)
@@ -324,16 +311,17 @@ const Detail = ({ id, setView }) => {
 
   const handleAddItem = () => {
     const newItem = {
-      id: '',
+      index: nextId, // gunakan counter
       do_in_id: id,
-      nama_barang: data?.po?.nama_barang || 'Item Baru',
-      index: items.length,
+      nama_barang: '',
       sn: '',
       is_verified: false,
       terisi: false,
-      jumlah_barang: ''
+      jumlah_barang: '',
+      owner: ''
     }
     setItems(prev => [...prev, newItem])
+    setNextId(prev => prev + 1) // increment counter
   }
 
   const [selectedPO, setSelectedPO] = useState(null)
@@ -468,8 +456,10 @@ const Detail = ({ id, setView }) => {
                   <TableHead>
                     <TableRow>
                       <TableCell>No</TableCell>
+                      <TableCell>Nama Barang</TableCell>
                       <TableCell>Serial Number</TableCell>
                       <TableCell>Jumlah</TableCell>
+                      <TableCell>Pemilik</TableCell>
                       <TableCell>Aksi</TableCell>
                     </TableRow>
                   </TableHead>
@@ -477,8 +467,11 @@ const Detail = ({ id, setView }) => {
                     {filteredItems.map((item, idx) => (
                       <TableRow key={item.id || idx}>
                         <TableCell>{idx + 1}</TableCell>
+                        <TableCell>{item.nama_barang || '-'}</TableCell>
                         <TableCell>{item.sn || '-'}</TableCell>
-                        <TableCell>{item.jumlah || '-'}</TableCell>
+                        <TableCell>{item.jumlah || item.jumlah_barang || '-'}</TableCell>
+                        <TableCell>{item.owner?.name || item.nama_pemilik || '-'}</TableCell>
+
                         <TableCell>
                           <IconButton color='secondary' onClick={() => handleDialogToggle(item)}>
                             <Icon icon='tabler:edit' />
@@ -513,11 +506,51 @@ const Detail = ({ id, setView }) => {
                   {items
                     .filter(item => !item.terisi)
                     .map((item, index) => (
-                      <Grid container spacing={2} key={index} sx={{ mt: 3 }}>
-                        {/* Serial Number Input */}
-                        <Grid item xs={5}>
+                      <Grid
+                        container
+                        spacing={2}
+                        key={index}
+                        alignItems='center'
+                        sx={{
+                          mt: 3,
+                          p: 2,
+                          border: '1px solid #e0e0e0',
+                          borderRadius: 2,
+                          position: 'relative',
+                          '&:hover': { boxShadow: '0px 2px 8px rgba(0,0,0,0.08)' }
+                        }}
+                      >
+                        {/* Tombol Hapus Item Baru */}
+                        <IconButton
+                          size='small'
+                          color='error'
+                          onClick={() => setItems(prev => prev.filter((_, i) => i !== index))}
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            backgroundColor: 'rgba(255,0,0,0.05)',
+                            '&:hover': { backgroundColor: 'rgba(255,0,0,0.1)' }
+                          }}
+                        >
+                          <Icon icon='tabler:x' />
+                        </IconButton>
+
+                        {/* Nama Barang */}
+                        <Grid item xs={12} md={3}>
                           <CustomTextField
-                            label={`Serial Number ${startIndex + index + 1}`}
+                            label='Nama Barang'
+                            value={item.nama_barang}
+                            onChange={e => handleItemChange(item.index, 'nama_barang', e.target.value)}
+                            placeholder='Masukkan Nama Barang'
+                            fullWidth
+                          />
+                        </Grid>
+
+                        {/* Serial Number */}
+                        <Grid item xs={12} md={3}>
+                          <CustomTextField
+                            label={`Serial Number ${index + 1}`}
                             value={item.sn}
                             placeholder='SNxxxx'
                             onChange={e => handleItemChange(item.index, 'sn', e.target.value)}
@@ -526,8 +559,8 @@ const Detail = ({ id, setView }) => {
                           />
                         </Grid>
 
-                        {/* Jumlah Barang Input */}
-                        <Grid item xs={3}>
+                        {/* Jumlah Barang */}
+                        <Grid item xs={12} md={2}>
                           <CustomTextField
                             type='number'
                             label='Jumlah'
@@ -545,28 +578,21 @@ const Detail = ({ id, setView }) => {
                           />
                         </Grid>
 
-                        {/* Status atau Aksi */}
-                        <Grid item xs={4}>
-                          {item.terisi ? (
-                            item.is_verified === 1 ? (
-                              <Typography variant='body1' color='success.main' sx={{ mt: 2 }}>
-                                Verified
-                              </Typography>
-                            ) : (
-                              <>
-                                <IconButton color='success' onClick={() => handleVerifyItem(index)}>
-                                  <Icon icon='tabler:square-check' />
-                                </IconButton>
-                                <IconButton color='secondary' onClick={() => handleDialogToggle(item)}>
-                                  <Icon icon='tabler:edit' />
-                                </IconButton>
-                              </>
-                            )
-                          ) : item.sn && item.jumlah_barang ? null : (
-                            <Typography variant='body2' color='text.secondary' sx={{ mt: 2 }}>
-                              Belum terisi
-                            </Typography>
-                          )}
+                        {/* Owner */}
+                        <Grid item xs={12} md={2}>
+                          <Autocomplete
+                            options={companies || []}
+                            getOptionLabel={option => option.name || ''}
+                            isOptionEqualToValue={(option, value) => option.id === value?.id} // penting!
+                            value={item.owner || null} // langsung pakai object
+                            onChange={(e, newValue) => {
+                              console.log('new owner:', newValue)
+                              handleItemChange(item.index, 'owner', newValue || null)
+                            }}
+                            renderInput={params => (
+                              <CustomTextField {...params} label='Owner' placeholder='Pilih Owner' fullWidth />
+                            )}
+                          />
                         </Grid>
                       </Grid>
                     ))}
@@ -576,8 +602,13 @@ const Detail = ({ id, setView }) => {
                     <Button variant='outlined' onClick={handleAddItem}>
                       Tambah Item
                     </Button>
-                    <Button variant='contained' color='primary' onClick={handleSubmitItems}>
-                      Submit Items
+                    <Button
+                      variant='contained'
+                      color='primary'
+                      onClick={handleSubmitItems}
+                      disabled={loading || items.filter(i => !i.terisi).length === 0}
+                    >
+                      {loading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : 'Submit Items'}
                     </Button>
                   </Box>
                 </form>

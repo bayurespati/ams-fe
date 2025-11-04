@@ -176,7 +176,7 @@ const FormValidationAsync = () => {
                     <CustomTextField
                       fullWidth
                       value={value}
-                      label='Nama Pekerjaan'
+                      label='Keterangan PO'
                       onChange={onChange}
                       placeholder='pekerjaan A'
                       error={Boolean(errors.nama_pekerjaan)}
@@ -190,17 +190,14 @@ const FormValidationAsync = () => {
                 <Controller
                   name='no_po_spk_pks'
                   control={control}
-                  rules={{ required: true }}
                   render={({ field: { value, onChange } }) => (
                     <CustomTextField
                       fullWidth
                       value={value}
-                      label='no_po_spk_pks'
+                      label='no_po_spk_pks (optional)'
                       onChange={onChange}
-                      placeholder='no_po_spk_pks'
-                      error={Boolean(errors.no_po_spk_pks)}
-                      aria-describedby='validation-async-nama-pekerjaan'
-                      {...(errors.no_po_spk_pks && { helperText: 'This field is required' })}
+                      placeholder='Masukkan nomor PO jika ada'
+                      error={false}
                     />
                   )}
                 />
