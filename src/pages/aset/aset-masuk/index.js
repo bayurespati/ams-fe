@@ -65,7 +65,7 @@ const defaultColumns = [
     field: 'nama_pekerjaan',
     headerClassName: 'super-app-theme--header',
     minWidth: 150,
-    headerName: 'Nama Pekerjaan',
+    headerName: 'PO ID',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.po.nama_pekerjaan}</Typography>
   },
   {
@@ -81,7 +81,7 @@ const defaultColumns = [
     minWidth: 190,
     field: 'no_do',
     headerClassName: 'super-app-theme--header',
-    headerName: 'NO DO',
+    headerName: 'NO. DO',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.no_do}</Typography>
   },
   {
@@ -89,7 +89,7 @@ const defaultColumns = [
     minWidth: 100,
     field: 'tanggal_masuk',
     headerClassName: 'super-app-theme--header',
-    headerName: 'tanggal masuk',
+    headerName: 'Tgl Masuk',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.tanggal_masuk}</Typography>
   },
   {
@@ -97,7 +97,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'no_gr',
     headerClassName: 'super-app-theme--header',
-    headerName: 'No GR',
+    headerName: 'No. GR',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.no_gr}</Typography>
   }
 ]

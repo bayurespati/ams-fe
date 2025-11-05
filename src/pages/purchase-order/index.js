@@ -53,7 +53,7 @@ const defaultColumns = [
     field: 'nama_pekerjaan',
     headerClassName: 'super-app-theme--header',
     minWidth: 150,
-    headerName: 'Nama Pekerjaan',
+    headerName: 'Deskripsi PO',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.nama_pekerjaan}</Typography>
   },
   {
@@ -61,7 +61,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'no_po_spk_pks',
     headerClassName: 'super-app-theme--header',
-    headerName: 'no_po_spk_pks',
+    headerName: 'No. po_spk_pks',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.no_po_spk_pks}</Typography>
   },
   {
@@ -69,7 +69,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'tanggal_po_spk_pks',
     headerClassName: 'super-app-theme--header',
-    headerName: 'tanggal_po_spk_pks',
+    headerName: 'Tgl po_spk_pks',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.tanggal_po_spk_pks}</Typography>
   },
   {
@@ -77,7 +77,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'tanggal_delivery',
     headerClassName: 'super-app-theme--header',
-    headerName: 'tanggal_delivery',
+    headerName: 'Tgl Delivery',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.tanggal_delivery}</Typography>
   },
   {
@@ -85,7 +85,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'nilai_pengadaan',
     headerClassName: 'super-app-theme--header',
-    headerName: 'nilai_pengadaan',
+    headerName: 'Nilai Pengadaan',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.nilai_pengadaan}</Typography>
   },
   {
@@ -93,7 +93,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'akun',
     headerClassName: 'super-app-theme--header',
-    headerName: 'akun',
+    headerName: 'Akun',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.akun}</Typography>
   },
   {
@@ -101,7 +101,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'cost_center',
     headerClassName: 'super-app-theme--header',
-    headerName: 'cost_center',
+    headerName: 'Cost Center',
     renderCell: ({ row }) => {
       return <Typography sx={{ color: 'text.secondary' }}>{row.cost_center}</Typography>
     }
@@ -398,7 +398,9 @@ const PurchaseOrderTable = () => {
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                     getOptionLabel={option => option.judul || ''}
                     onChange={(e, value) => setEditValue({ ...editValue, plan_id: value.id })}
-                    renderInput={params => <CustomTextField placeholder='Printer' {...params} label='Nama Plan: ' />}
+                    renderInput={params => (
+                      <CustomTextField placeholder='Pilih nama plan yang tersedia' {...params} label='Nama Plan: ' />
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -406,7 +408,7 @@ const PurchaseOrderTable = () => {
                     fullWidth
                     color={'secondary'}
                     value={editValue.nama_pekerjaan}
-                    label='nama_pekerjaan'
+                    label='Deskripsi PO'
                     sx={{ mr: [0, 4], mb: [3, 5] }}
                     onChange={e => setEditValue({ ...editValue, nama_pekerjaan: e.target.value })}
                   />

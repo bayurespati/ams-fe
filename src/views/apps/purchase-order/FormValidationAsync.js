@@ -156,7 +156,7 @@ const FormValidationAsync = () => {
                       renderInput={params => (
                         <CustomTextField
                           {...params}
-                          placeholder='Plan A'
+                          placeholder='Pilih nama plan yang tersedia'
                           label='Nama Plan'
                           error={Boolean(errors.plan_id)}
                           helperText={errors.plan_id && 'This field is required'}
@@ -178,7 +178,7 @@ const FormValidationAsync = () => {
                       value={value}
                       label='Keterangan PO'
                       onChange={onChange}
-                      placeholder='pekerjaan A'
+                      placeholder='Deskripsi atau keterangan PO'
                       error={Boolean(errors.nama_pekerjaan)}
                       aria-describedby='validation-async-nama-pekerjaan'
                       {...(errors.nama_pekerjaan && { helperText: 'This field is required' })}
@@ -249,7 +249,7 @@ const FormValidationAsync = () => {
                       value={value}
                       label='Nilai Pengadaan'
                       onChange={onChange}
-                      placeholder='12'
+                      placeholder='Input nominal pengadaan'
                       error={Boolean(errors.nilai_pengadaan)}
                       aria-describedby='validation-async-nilai-pengadaan'
                       {...(errors.nilai_pengadaan && { helperText: 'This field is required' })}
@@ -304,7 +304,7 @@ const FormValidationAsync = () => {
                       value={value}
                       label='Akun'
                       onChange={onChange}
-                      placeholder='12'
+                      placeholder='Input akun'
                       error={Boolean(errors.akun)}
                       aria-describedby='validation-async-akun'
                       {...(errors.akun && { helperText: 'This field is required' })}
@@ -324,7 +324,7 @@ const FormValidationAsync = () => {
                       value={value}
                       label='cost_center'
                       onChange={onChange}
-                      placeholder='12'
+                      placeholder='Input cost center'
                       error={Boolean(errors.cost_center)}
                       aria-describedby='validation-async-cost_center'
                       {...(errors.cost_center && { helperText: 'This field is required' })}

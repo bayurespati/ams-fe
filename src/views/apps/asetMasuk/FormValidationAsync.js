@@ -136,7 +136,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView }) => {
                         <CustomTextField
                           {...params}
                           label='PO ID'
-                          placeholder='PO Laptop'
+                          placeholder='Pilih deskripsi PO yang tersedia'
                           error={Boolean(errors.po_id)}
                           {...(errors.po_id && { helperText: 'This field is required' })}
                         />
@@ -158,7 +158,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView }) => {
                       value={value}
                       label='No DO'
                       onChange={onChange}
-                      placeholder='DO123'
+                      placeholder='Input nomor DO'
                       error={Boolean(errors.no_do)}
                       {...(errors.no_do && { helperText: 'This field is required' })}
                     />
@@ -185,7 +185,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView }) => {
                         <CustomTextField
                           {...params}
                           label='Lokasi Gudang'
-                          placeholder='Jakarta Pusat'
+                          placeholder='Pilih lokasi gudang'
                           error={Boolean(errors.lokasi_gudang)}
                           {...(errors.lokasi_gudang && { helperText: 'This field is required' })}
                         />
@@ -269,7 +269,7 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView }) => {
                       value={value}
                       label='No. Goods Receipt (Optional)'
                       onChange={onChange}
-                      placeholder='GR123'
+                      placeholder='Input nomor GR jika ada'
                     />
                   )}
                 />

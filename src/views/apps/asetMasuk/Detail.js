@@ -378,6 +378,7 @@ const Detail = ({ id, setView }) => {
                 <Typography variant='body1'>{data?.keterangan}</Typography>
               </Grid>
 
+              {/* === File Evidence === */}
               <Grid item xs={12} md={6}>
                 <Typography variant='body1'>File Evidence</Typography>
 
@@ -397,7 +398,6 @@ const Detail = ({ id, setView }) => {
                           Lihat File Evidence
                         </Button>
 
-                        {/* Tampilkan nama file di bawah tombol */}
                         <Typography variant='body2' sx={{ mt: 1 }}>
                           {data.file_evidence.split('/').pop()}
                         </Typography>
@@ -436,6 +436,68 @@ const Detail = ({ id, setView }) => {
                 ) : (
                   <Typography variant='body2' color='text.secondary'>
                     Tidak ada file evidence
+                  </Typography>
+                )}
+              </Grid>
+
+              {/* === File Foto Terima === */}
+              <Grid item xs={12} md={6}>
+                <Typography variant='body1'>Foto Bukti Terima</Typography>
+
+                {data?.file_foto_terima ? (
+                  <Box sx={{ mt: 2 }}>
+                    {!showPreview ? (
+                      <>
+                        <Button
+                          variant='outlined'
+                          color='primary'
+                          size='small'
+                          onClick={() => {
+                            const url = `https://iams-api.pins.co.id/storage/${data.file_foto_terima}`
+                            window.open(url, '_blank', 'noopener,noreferrer')
+                          }}
+                        >
+                          Lihat File Foto Terima
+                        </Button>
+
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          {data.file_foto_terima.split('/').pop()}
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        {/\.(pdf)$/i.test(data.file_foto_terima) ? (
+                          <iframe
+                            src={`https://iams-api.pins.co.id/storage/${data.file_foto_terima}`}
+                            width='100%'
+                            height='500px'
+                            style={{ border: '1px solid #ccc', borderRadius: '8px' }}
+                            title='File Foto Terima Preview'
+                          />
+                        ) : /\.(jpg|jpeg|png|gif)$/i.test(data.file_foto_terima) ? (
+                          <img
+                            src={`https://iams-api.pins.co.id/storage/${data.file_foto_terima}`}
+                            alt='File Foto Terima'
+                            style={{ maxWidth: '100%', borderRadius: '8px' }}
+                          />
+                        ) : (
+                          <Button
+                            variant='outlined'
+                            color='primary'
+                            size='small'
+                            href={`https://iams-api.pins.co.id/storage/${data.file_foto_terima}`}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                          >
+                            Download File
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                ) : (
+                  <Typography variant='body2' color='text.secondary'>
+                    Tidak ada file foto terima
                   </Typography>
                 )}
               </Grid>
