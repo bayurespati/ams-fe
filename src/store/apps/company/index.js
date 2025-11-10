@@ -5,7 +5,7 @@ import axios from 'axios'
 const replaceUuidWithId = data => {
   return data.map(item => {
     const { uuid, ...rest } = item
-    
+
     return { id: uuid, ...rest }
   })
 }
@@ -13,7 +13,7 @@ const replaceUuidWithId = data => {
 const replaceSingleUuidWithId = data => {
   if (!data) {
     console.error('replaceSingleUuidWithId: received undefined data')
-    
+
     return {}
   }
 
@@ -41,7 +41,7 @@ export const fetchCompany = createAsyncThunk('appCompany/fetchCompany', async pa
 export const addCompany = createAsyncThunk('appCompany/addCompany', async newCompany => {
   const response = await axios.post(`${BASE_URL}companies`, newCompany)
   const data = replaceSingleUuidWithId(response.data.data)
-  
+
   return data
 })
 
@@ -96,14 +96,15 @@ export const appCompanySlice = createSlice({
       state.garbage = searchCompany(state.allGarbage, query)
     }
   },
+
   extraReducers: builder => {
     builder.addCase(fetchCompany.fulfilled, (state, action) => {
       state.params = action.payload.params
       state.allData = action.payload.data
       state.total = action.payload.data.length
-      state.data = searchCompany(state.allData, action.payload.params.q)
+      state.data = searchCompany(state.allData, action.payload.params?.q || '')
       state.allGarbage = action.payload.garbage
-      state.garbage = searchCompany(state.allGarbage, action.payload.params.q)
+      state.garbage = searchCompany(state.allGarbage, action.payload.params?.q || '')
       state.totalGarbage = action.payload.garbage.length
     })
     builder

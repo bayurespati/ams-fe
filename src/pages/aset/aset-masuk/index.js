@@ -65,7 +65,7 @@ const defaultColumns = [
     field: 'nama_pekerjaan',
     headerClassName: 'super-app-theme--header',
     minWidth: 150,
-    headerName: 'Nama Pekerjaan',
+    headerName: 'PO ID',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.po.nama_pekerjaan}</Typography>
   },
   {
@@ -81,7 +81,7 @@ const defaultColumns = [
     minWidth: 190,
     field: 'no_do',
     headerClassName: 'super-app-theme--header',
-    headerName: 'NO DO',
+    headerName: 'NO. DO',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.no_do}</Typography>
   },
   {
@@ -89,7 +89,7 @@ const defaultColumns = [
     minWidth: 100,
     field: 'tanggal_masuk',
     headerClassName: 'super-app-theme--header',
-    headerName: 'tanggal masuk',
+    headerName: 'Tgl Masuk',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.tanggal_masuk}</Typography>
   },
   {
@@ -97,7 +97,7 @@ const defaultColumns = [
     minWidth: 150,
     field: 'no_gr',
     headerClassName: 'super-app-theme--header',
-    headerName: 'No GR',
+    headerName: 'No. GR',
     renderCell: ({ row }) => <Typography sx={{ color: 'text.secondary' }}>{row.no_gr}</Typography>
   }
 ]
@@ -109,6 +109,8 @@ const AsetMasukTable = () => {
   const [detail, setDetail] = useState({})
   const [newFile, setNewFile] = useState(null)
   const [isNewFileSelected, setIsNewFileSelected] = useState(false)
+  const [newFileFotoTerima, setNewFileFotoTerima] = useState(null)
+  const [isNewFileFotoTerimaSelected, setIsNewFileFotoTerimaSelected] = useState(false)
 
   const theme = useTheme()
   const { direction } = theme
@@ -122,7 +124,8 @@ const AsetMasukTable = () => {
     file_evidence: '',
     keterangan: '',
     no_gr: '',
-    tanggal_masuk: ''
+    tanggal_masuk: '',
+    file_foto_terima: ''
   })
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
@@ -179,7 +182,8 @@ const AsetMasukTable = () => {
         file_evidence: row.file_evidence,
         keterangan: row.keterangan,
         no_gr: row.no_gr,
-        tanggal_masuk: new Date(row.tanggal_masuk)
+        tanggal_masuk: new Date(row.tanggal_masuk),
+        file_foto_terima: row.file_foto_terima
       })
 
       setEditDialogOpen(true)
@@ -204,6 +208,9 @@ const AsetMasukTable = () => {
 
     if (newFile) {
       formData.append('file_evidence', newFile)
+    }
+    if (newFileFotoTerima) {
+      formData.append('file_foto_terima', newFileFotoTerima)
     }
 
     handleEditAsetMasuk(formData)
@@ -383,7 +390,7 @@ const AsetMasukTable = () => {
                 </DatePickerWrapper>
               </Grid>
 
-              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
+              {/* <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
                 <CustomAutocomplete
                   fullWidth
                   color={'secondary'}
@@ -394,7 +401,7 @@ const AsetMasukTable = () => {
                   value={data_owner.find(option => option.id === editValue.owner_id) || null} // Temukan objek berdasarkan title
                   renderInput={params => <CustomTextField placeholder='id1' {...params} label='Pemilik' />}
                 />
-              </Grid>
+              </Grid> */}
 
               <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
                 <CustomTextField
@@ -466,6 +473,58 @@ const AsetMasukTable = () => {
                 {newFile && (
                   <Typography variant='body2' sx={{ mt: 1 }}>
                     {newFile.name}
+                  </Typography>
+                )}
+              </Grid>
+
+              {/* ===== FILE FOTO TERIMA ===== */}
+              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={12}>
+                <Typography variant='body2' component='span' sx={{ mb: 2 }}>
+                  File Foto Terima Saat Ini:
+                </Typography>
+                {editValue.file_foto_terima ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Button
+                      variant='outlined'
+                      color='primary'
+                      href={`https://iams-api.pins.co.id/storage/${editValue.file_foto_terima}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      Lihat File Foto Terima
+                    </Button>
+                    <Typography variant='body2' sx={{ mt: 1 }}>
+                      {editValue.file_foto_terima.split('/').pop()}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    Tidak ada file foto terima.
+                  </Typography>
+                )}
+              </Grid>
+
+              <Grid item sx={{ mr: [0, 4], mb: [3, 5] }} xs={12}>
+                <Typography variant='body2' component='span' sx={{ mb: 2, display: 'block' }}>
+                  Upload File Foto Terima Baru:
+                </Typography>
+
+                <Button variant='outlined' component='label' color='primary' sx={{ textTransform: 'none' }}>
+                  Pilih File
+                  <input
+                    type='file'
+                    accept='application/pdf,image/*'
+                    hidden
+                    onChange={e => {
+                      setNewFileFotoTerima(e.target.files[0])
+                      setIsNewFileFotoTerimaSelected(true)
+                    }}
+                  />
+                </Button>
+
+                {newFileFotoTerima && (
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    {newFileFotoTerima.name}
                   </Typography>
                 )}
               </Grid>
