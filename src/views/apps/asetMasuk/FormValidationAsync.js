@@ -284,8 +284,8 @@ const FormValidationAsync = ({ data_lokasi_gudang, data_owner, setView }) => {
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
                     pl: 0,
-                    ml: 0, // ✅ geser semua konten lebih kiri (atur sesuai tampilan, -1 atau -2 biasanya pas)
-                    gap: 0 // jarak antar dua box
+                    ml: 0,
+                    gap: 0
                   }}
                 >
                   {/* Upload File Evidence */}

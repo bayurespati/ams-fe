@@ -390,19 +390,6 @@ const AsetMasukTable = () => {
                 </DatePickerWrapper>
               </Grid>
 
-              {/* <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
-                <CustomAutocomplete
-                  fullWidth
-                  color={'secondary'}
-                  options={data_owner}
-                  id='owner_id'
-                  onChange={(event, value) => setEditValue({ ...editValue, owner_id: value.id })} // Simpan hanya id
-                  getOptionLabel={option => option.nama || ''}
-                  value={data_owner.find(option => option.id === editValue.owner_id) || null} // Temukan objek berdasarkan title
-                  renderInput={params => <CustomTextField placeholder='id1' {...params} label='Pemilik' />}
-                />
-              </Grid> */}
-
               <Grid item sx={{ mr: [0, 4], mb: [3, 5] }}>
                 <CustomTextField
                   fullWidth

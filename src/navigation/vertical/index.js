@@ -49,6 +49,11 @@ const navigation = () => {
           title: 'Dismantle',
           path: '/aset/dismantle',
           auth: false
+        },
+        {
+          title: 'Approval',
+          path: '/aset/approval',
+          auth: false
         }
       ],
       auth: false,
