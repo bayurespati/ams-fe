@@ -72,6 +72,7 @@ const Detail = ({ id, setView }) => {
       renderCell: ({ row }) => `${row.owner.name} (${row.owner.phone})`
     }
   ]
+
   // ===============================
   // HANDLER: APPROVE DO-IN
   // ===============================
