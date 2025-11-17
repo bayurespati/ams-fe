@@ -113,6 +113,8 @@ const Detail = ({ id, setView }) => {
           sn: item.sn,
           jumlah: Number(item.jumlah_barang || 1),
           owner_id: item.owner?.id || null
+          approval
+          main
         }))
       }
 

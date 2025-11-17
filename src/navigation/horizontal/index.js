@@ -23,7 +23,8 @@ const navigation = () => {
         { title: 'Aset Masuk', path: '/aset/aset-masuk' },
         { title: 'Aset Keluar', path: '/aset/aset-keluar' },
         { title: 'Perbaikan', path: '/aset/perbaikan' },
-        { title: 'Dismantle', path: '/aset/dismantle' }
+        { title: 'Dismantle', path: '/aset/dismantle' },
+        { title: 'Approval', path: '/aset/approval' }
       ]
     },
     {
