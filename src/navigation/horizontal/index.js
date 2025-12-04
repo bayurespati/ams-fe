@@ -36,7 +36,8 @@ const navigation = () => {
         { title: 'Varietas', path: '/pengaturan/variety' },
         { title: 'Tipe', path: '/pengaturan/type' },
         { title: 'Brand', path: '/pengaturan/brand' },
-        { title: 'Warehouse', path: '/pengaturan/warehouse' }
+        { title: 'Warehouse', path: '/pengaturan/warehouse' },
+        { title: 'Rack', path: '/pengaturan/rack' }
       ]
     },
     {
