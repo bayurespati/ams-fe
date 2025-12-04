@@ -14,6 +14,7 @@ import brand from 'src/store/apps/brand'
 import company from './apps/company'
 import appLabelAset from './apps/label-aset'
 import warehouse from 'src/store/apps/warehouse'
+import rack from 'src/store/apps/rack'
 
 export const store = configureStore({
   reducer: {
@@ -28,7 +29,8 @@ export const store = configureStore({
     brand,
     company,
     appLabelAset,
-    warehouse
+    warehouse,
+    rack
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
