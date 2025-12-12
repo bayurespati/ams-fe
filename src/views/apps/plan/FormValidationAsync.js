@@ -554,7 +554,6 @@ const FormValidationAsync = () => {
                             placeholder='Pilih jenis barang'
                             label='Jenis Barang *'
                             error={Boolean(itemErrors[idx]?.jenis_barang_id)}
-                            // helperText={itemErrors[idx]?.jenis_barang_id || `Tersedia: ${formattedJenisBarang.length}`}
                           />
                         )}
                       />
@@ -589,7 +588,6 @@ const FormValidationAsync = () => {
                             placeholder='Pilih tipe barang'
                             label='Tipe Barang *'
                             error={Boolean(itemErrors[idx]?.tipe_barang_id)}
-                            // helperText={itemErrors[idx]?.tipe_barang_id || `Tersedia: ${formattedTipeBarang.length}`}
                           />
                         )}
                       />

@@ -270,6 +270,7 @@ const PlanTable = () => {
     const editData = {
       // Pastikan uuid menggunakan row.uuid bila tersedia, fallback ke row.id
       uuid: row.uuid || row.id || '',
+
       // Simpan id asli agar dapat dikirim juga (beberapa API/endpoint pakai id bukan uuid)
       id: row.id || row.uuid || '',
       is_lop: isLop ? '1' : '0',
@@ -296,6 +297,7 @@ const PlanTable = () => {
     const formData = new FormData()
 
     formData.append('_method', 'PATCH')
+
     // Juga sertakan 'id' agar muncul di payload jika diperlukan backend
     formData.append('id', editValue.id || editValue.uuid || '')
 
