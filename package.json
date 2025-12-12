@@ -54,6 +54,7 @@
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "8.5.1",
     "keen-slider": "6.8.5",
+    "mdi-material-ui": "^7.9.4",
     "next": "13.3.2",
     "nprogress": "0.2.0",
     "payment": "2.4.6",
