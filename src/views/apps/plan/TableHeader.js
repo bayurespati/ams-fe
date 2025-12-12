@@ -3,32 +3,16 @@ import { useState } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
-import Checkbox from '@mui/material/Checkbox'
-import Typography from '@mui/material/Typography'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
 import { useRouter } from 'next/router'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Grid from '@mui/material/Grid'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
 
 const TableHeader = props => {
   // ** Props
-  const { value, handleFilter, hand } = props
+  const { value, handleFilter } = props
   const router = useRouter()
-
-  // ** State
-  const [open, setOpen] = useState(false)
-  const handleDialogToggle = () => setOpen(!open)
-
-  const onSubmit = e => {
-    setOpen(false)
-    e.preventDefault()
-  }
 
   return (
     <>
